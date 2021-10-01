@@ -1,10 +1,11 @@
 import React from 'react'
+import LandingPageWrapper from './Landing.styled';
 
 function Landing() {
     return (
-        <div>
+        <LandingPageWrapper>
             <h1>Landing</h1>
-        </div>
+        </LandingPageWrapper>
     )
 }
 
