@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-const LandingPageWrapper = styled.div`
+const RoomPageWrapper = styled.div`
     height: 100%;
     background: ${(props) => props.theme.lightGray};
 
@@ -9,4 +9,4 @@ const LandingPageWrapper = styled.div`
     }
 `;
 
-export default LandingPageWrapper;
+export default RoomPageWrapper;

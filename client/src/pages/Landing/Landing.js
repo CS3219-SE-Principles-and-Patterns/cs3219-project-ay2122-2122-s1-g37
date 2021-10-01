@@ -1,10 +1,11 @@
 import React from 'react'
 import LandingPageWrapper from './Landing.styled';
+import Typography from "@mui/material/Typography";
 
 function Landing() {
     return (
-        <LandingPageWrapper>
-            <h1>Landing</h1>
+        <LandingPageWrapper elevation={0}>
+            <Typography variant="h3">Landing Page</Typography>
         </LandingPageWrapper>
     )
 }
