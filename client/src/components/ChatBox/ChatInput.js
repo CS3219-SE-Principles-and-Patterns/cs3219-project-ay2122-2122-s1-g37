@@ -1,6 +1,6 @@
 import React, { useRef } from 'react'
 import { Button, TextField } from "@mui/material"
-import {ChatInputWrapper, TextFieldWrapper} from './ChatInput.styled';
+import {ButtonWrapper, ChatInputWrapper, TextFieldWrapper} from './ChatInput.styled';
 
 function ChatInput({onSubmit}) {
     const inputRef = useRef(null);
@@ -15,7 +15,7 @@ function ChatInput({onSubmit}) {
         <form onSubmit={submitMsg}>
             <ChatInputWrapper> 
                 <TextFieldWrapper className="chatinput-textfield" inputRef={inputRef} placeholder="Chat here..." size="small"/>
-                <Button className="chatinput-btn" variant="contained" onClick={submitMsg}>Submit</Button>
+                <ButtonWrapper className="chatinput-btn" variant="contained" onClick={submitMsg}>Submit</ButtonWrapper>
             </ChatInputWrapper>
         </form>
     )
