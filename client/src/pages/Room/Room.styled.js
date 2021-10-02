@@ -26,6 +26,14 @@ const RoomPageWrapper = styled.div`
 	.room-sidebar {
 		height: 80%;
 		width: 22.5%;
+
+		display: flex;
+		flex-direction: column;
+		justify-content: space-around;
+
+		.chatbox {
+			height: 75%;
+		}
 	}
 `;
 
