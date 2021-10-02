@@ -9,7 +9,7 @@ const RoomPageWrapper = styled.div`
 	background: ${(props) => props.theme.lightGray};
 	height: 100%;
 
-	// To-do: Fix aspect ratio maintaining. Currently slight off vertically, stretches over page background on lower heights
+	// To-do: Fix aspect ratio maintaining. Currently slightly off vertically, stretches over page background on lower heights
 	.room-player {
 		height: 80%;
 		width: 72.5%;
@@ -23,6 +23,7 @@ const RoomPageWrapper = styled.div`
 			}
 		}
 	}
+	// To-do: Fix chatbox overflowing the flex container
 	.room-sidebar {
 		height: 80%;
 		width: 22.5%;
