@@ -9,7 +9,9 @@ function Room() {
 	return (
 		<RoomPageWrapper>
 			<div className="room-player">
-				<VideoPlayer />
+				<div className="room-res-wrapper">
+					<VideoPlayer />
+				</div>
 			</div>
 			<div className="room-sidebar">
 				<Chatbox />
