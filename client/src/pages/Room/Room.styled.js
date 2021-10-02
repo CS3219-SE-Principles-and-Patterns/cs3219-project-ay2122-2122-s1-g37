@@ -5,7 +5,7 @@ const RoomPageWrapper = styled.div`
     background: ${(props) => props.theme.lightGray};
 
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
 
