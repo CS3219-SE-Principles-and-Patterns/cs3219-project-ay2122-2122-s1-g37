@@ -8,8 +8,12 @@ function Room() {
 
 	return (
 		<RoomPageWrapper>
-			<VideoPlayer />
-			<Chatbox />
+			<div className="room-player">
+				<VideoPlayer />
+			</div>
+			<div className="room-sidebar">
+				<Chatbox />
+			</div>
 		</RoomPageWrapper>
 	);
 }

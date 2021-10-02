@@ -1,17 +1,24 @@
 import styled from "styled-components";
 
 const RoomPageWrapper = styled.div`
-    height: 100%;
-    background: ${(props) => props.theme.lightGray};
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-around;
 
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
+	background: ${(props) => props.theme.lightGray};
 
-    h3 {
-        color: ${(props) => props.theme.white};
-    }
+	height: 100%;
+
+	.room-player {
+		height: 80%;
+		width: 72.5%;
+	}
+
+	.room-sidebar {
+		height: 80%;
+		width: 22.5%;
+	}
 `;
 
 export default RoomPageWrapper;

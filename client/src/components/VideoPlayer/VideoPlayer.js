@@ -33,22 +33,19 @@ function VideoPlayer() {
 	};
 
 	return (
-		<div>
-			<ReactPlayer
-				url={state.url}
-				playing={state.playing}
-				playbackRate={state.playbackRate}
-				loop={state.loop}
-				controls={state.controls}
-				muted={state.muted}
-				onPlay={playCallback}
-				onPause={pauseCallback}
-			/>
-			<div>
-				<Button onClick={togglePlay}>Play/Pause</Button>
-				<Button onClick={toggleControls}>Controls</Button>
-			</div>
-		</div>
+		<ReactPlayer
+			className="react-player"
+			url={state.url}
+			playing={state.playing}
+			playbackRate={state.playbackRate}
+			loop={state.loop}
+			controls={state.controls}
+			muted={state.muted}
+			onPlay={playCallback}
+			onPause={pauseCallback}
+			width="100%"
+			height="100%"
+		/>
 	);
 }
 
