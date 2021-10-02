@@ -14,7 +14,7 @@ function Chatbox() {
 	};
 
 	return (
-		<ChatboxWrapper>
+		<ChatboxWrapper className="chatbox">
 			<div className="chatbox-content">
 				<ChatContent messages={messages} />
 			</div>

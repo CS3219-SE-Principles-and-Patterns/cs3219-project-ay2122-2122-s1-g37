@@ -18,14 +18,20 @@ function Room() {
 
 	const playCallback = () => {
 		console.log("VIDEO PLAYS");
+		// Broadcast PLAY event to all other users
 	};
 
 	const pauseCallback = () => {
 		console.log("VIDEO PAUSES");
+		// Broadcast PAUSE event to all other users
 	};
+
+	// To-do: Handling SEEK event. YouTube API does not provide SEEK directly
+	// Save progress when PAUSE happens and compare progresses when PLAY happens
 
 	const linkCallback = (url) => {
 		setPlayerState({ ...playerState, url });
+		// Broadcast new link to all other users
 	};
 
 	return (
