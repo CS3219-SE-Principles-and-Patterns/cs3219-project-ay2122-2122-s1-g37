@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Chatbox from "../../components/ChatBox/Chatbox";
+import RoomSettings from "../../components/RoomSettings/RoomSettings";
 import VideoLinker from "../../components/VideoLinker/VideoLinker";
 import VideoPlayer from "../../components/VideoPlayer/VideoPlayer";
 import Watchmates from "../../components/Watchmates/Watchmates";
@@ -23,9 +24,24 @@ const initialUsers = [
 	{ id: 8, name: "User8", isHost: false },
 ];
 
+const initialSettings = {
+	capacity: 15,
+	users: [
+		{ id: 1, name: "User1", canChat: true, canVideo: true },
+		{ id: 2, name: "User2", canChat: false, canVideo: true },
+		{ id: 3, name: "User3", canChat: false, canVideo: true },
+		{ id: 4, name: "User4", canChat: false, canVideo: true },
+		{ id: 5, name: "User5", canChat: false, canVideo: true },
+		{ id: 6, name: "User6", canChat: false, canVideo: true },
+		{ id: 7, name: "User7", canChat: false, canVideo: true },
+		{ id: 8, name: "User8", canChat: false, canVideo: true },
+	],
+};
+
 function Room() {
 	const [playerState, setPlayerState] = useState(initialPlayerState);
 	const [users, setUsers] = useState(initialUsers);
+	const [settings, setSettings] = useState(initialSettings);
 
 	// SOCKET.IO related stuff will be handled here
 
@@ -47,6 +63,11 @@ function Room() {
 		// Broadcast new link to all other users
 	};
 
+	const saveCallback = () => {
+		console.log("SETTINGS SAVED");
+		// Broadcast settings to all other users;
+	};
+
 	return (
 		<RoomPageWrapper>
 			<div className="room-player">
@@ -62,6 +83,11 @@ function Room() {
 				<VideoLinker linkCallback={linkCallback} />
 				<Watchmates users={users} />
 				<Chatbox />
+				<RoomSettings
+					capacity={settings.capacity}
+					users={settings.users}
+					saveCallback={saveCallback}
+				/>
 			</div>
 		</RoomPageWrapper>
 	);
