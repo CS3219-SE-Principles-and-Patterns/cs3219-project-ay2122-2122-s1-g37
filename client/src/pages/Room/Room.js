@@ -2,17 +2,30 @@ import React, { useState } from "react";
 import Chatbox from "../../components/ChatBox/Chatbox";
 import VideoLinker from "../../components/VideoLinker/VideoLinker";
 import VideoPlayer from "../../components/VideoPlayer/VideoPlayer";
+import Watchmates from "../../components/Watchmates/Watchmates";
 import RoomPageWrapper from "./Room.styled";
 
-const initialState = {
+const initialPlayerState = {
 	url: "https://www.youtube.com/watch?v=YHXB1xp-xXc",
 	playing: true,
 	syncTime: 0,
 	syncType: "seconds",
 };
 
+const initialUsers = [
+	{ id: 1, name: "User1", isHost: true },
+	{ id: 2, name: "User2", isHost: false },
+	{ id: 3, name: "User3", isHost: false },
+	{ id: 4, name: "User4", isHost: false },
+	{ id: 5, name: "User5", isHost: false },
+	{ id: 6, name: "User6", isHost: false },
+	{ id: 7, name: "User7", isHost: false },
+	{ id: 8, name: "User8", isHost: false },
+];
+
 function Room() {
-	const [playerState, setPlayerState] = useState(initialState);
+	const [playerState, setPlayerState] = useState(initialPlayerState);
+	const [users, setUsers] = useState(initialUsers);
 
 	// SOCKET.IO related stuff will be handled here
 
@@ -47,6 +60,7 @@ function Room() {
 			</div>
 			<div className="room-sidebar">
 				<VideoLinker linkCallback={linkCallback} />
+				<Watchmates users={users} />
 				<Chatbox />
 			</div>
 		</RoomPageWrapper>

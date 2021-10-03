@@ -32,8 +32,12 @@ const RoomPageWrapper = styled.div`
 		flex-direction: column;
 		justify-content: space-around;
 
+		.watchmates {
+			height: 25%;
+		}
+
 		.chatbox {
-			height: 75%;
+			height: 60%;
 		}
 	}
 `;

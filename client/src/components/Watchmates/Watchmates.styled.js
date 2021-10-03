@@ -3,9 +3,18 @@ import { styled as mStyled } from "@mui/material/styles";
 import { List } from "@mui/material";
 import { theme } from "../../styles//theme";
 
-export const ChatContentWrapper = styled.div`
+export const WatchmatesWrapper = styled.div`
 	background: ${(props) => props.theme.darkGray};
-	height: 100%;
+	padding: 10px;
+
+	display: flex;
+	flex-direction: column;
+
+	p {
+		color: ${(props) => props.theme.orange};
+		font-weight: bold;
+	}
+
 	li {
 		color: ${(props) => props.theme.white};
 		font-size: ${(props) => props.theme.fontSize};
