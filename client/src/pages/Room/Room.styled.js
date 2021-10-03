@@ -37,7 +37,7 @@ const RoomPageWrapper = styled.div`
 		}
 
 		.chatbox {
-			height: 60%;
+			height: 50%;
 		}
 	}
 `;
