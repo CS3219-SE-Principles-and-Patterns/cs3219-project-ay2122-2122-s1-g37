@@ -9,27 +9,27 @@ import NavBar from "./components/NavBar/NavBar";
 import AppWrapper from "./App.styled";
 
 function App() {
-  return (
-    <Router>
-      <ThemeProvider theme={theme}>
-        <AppWrapper>
-          <div className="app-navbar"> 
-            <NavBar />
-          </div>
-          <div className="app-content"> 
-            <Switch>
-              <Route path="/room">
-                <Room />
-              </Route>
-              <Route path="/"> 
-                <Landing />
-              </Route>
-            </Switch>
-          </div>
-        </AppWrapper>
-      </ThemeProvider>
-    </Router>
-  );
+	return (
+		<Router>
+			<ThemeProvider theme={theme}>
+				<AppWrapper>
+					<div className="app-navbar">
+						<NavBar />
+					</div>
+					<div className="app-content">
+						<Switch>
+							<Route path="/room">
+								<Room />
+							</Route>
+							<Route path="/">
+								<Landing />
+							</Route>
+						</Switch>
+					</div>
+				</AppWrapper>
+			</ThemeProvider>
+		</Router>
+	);
 }
 
 export default App;
