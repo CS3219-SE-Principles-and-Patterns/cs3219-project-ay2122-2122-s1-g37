@@ -32,8 +32,12 @@ function RoomSettings({ capacity, users, saveCallback }) {
 				<ContentWrapper>
 					<Typography className="settings-title">Room settings</Typography>
 					<div className="settings-capacity">
-						<Typography>Max capacity (Up to 15):</Typography>
-						<TextField type="number" placeholder={capacity} />
+						<Typography className="capacity-text">Max capacity (Up to 15):</Typography>
+						<TextField
+							className="capacity-input"
+							type="number"
+							placeholder={capacity}
+						/>
 					</div>
 					<div className="settings-table">
 						<RoomTable users={users} />

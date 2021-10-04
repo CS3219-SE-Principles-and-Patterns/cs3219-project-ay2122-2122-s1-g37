@@ -26,4 +26,7 @@ export const TextFieldWrapper = mStyled(TextField)({
 export const ButtonWrapper = mStyled(Button)({
 	background: theme.orange,
 	color: theme.darkGray,
+	":hover": {
+		background: theme.darkOrange,
+	},
 });

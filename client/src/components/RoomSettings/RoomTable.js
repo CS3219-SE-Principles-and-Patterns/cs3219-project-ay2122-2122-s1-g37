@@ -1,4 +1,4 @@
-import { Button, Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
+import { Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
 import React from "react";
 import { TableContainerWrapper, KickButtonWrapper } from "./RoomTable.styled";
 
@@ -17,10 +17,16 @@ function RoomTable({ users }) {
 						<TableRow key={user.id}>
 							<TableCell>{user.name}</TableCell>
 							<TableCell>
-								<Checkbox defaultChecked={user.canChat} />
+								<Checkbox
+									className="table-checkbox"
+									defaultChecked={user.canChat}
+								/>
 							</TableCell>
 							<TableCell>
-								<Checkbox defaultChecked={user.canVideo} />
+								<Checkbox
+									className="table-checkbox"
+									defaultChecked={user.canVideo}
+								/>
 							</TableCell>
 							<TableCell>
 								<KickButtonWrapper variant="contained">Kick</KickButtonWrapper>

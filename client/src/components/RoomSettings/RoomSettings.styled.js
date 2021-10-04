@@ -48,6 +48,17 @@ export const ContentWrapper = styled.div`
 		justify-content: flex-start;
 		align-items: center;
 
+		.capacity-text {
+			color: ${(props) => props.theme.white};
+		}
+
+		.capacity-input {
+			width: 20%;
+			background: ${(props) => props.theme.white};
+			color: ${(props) => props.theme.darkGray};
+			border-radius: 5px;
+		}
+
 		p {
 			margin-right: 15px;
 		}
@@ -72,5 +83,8 @@ export const ContentWrapper = styled.div`
 export const ButtonWrapper = mStyled(Button)({
 	background: theme.orange,
 	color: theme.darkGray,
+	":hover": {
+		background: theme.darkOrange,
+	},
 	marginLeft: "15px",
 });
