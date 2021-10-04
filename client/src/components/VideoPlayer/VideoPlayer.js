@@ -14,7 +14,6 @@ function VideoPlayer({ url, playing, syncTime, syncType, playCallback, pauseCall
 			muted
 			onPlay={playCallback}
 			onPause={pauseCallback}
-			onProgress={(progress) => console.log(progress)}
 		/>
 	);
 }
