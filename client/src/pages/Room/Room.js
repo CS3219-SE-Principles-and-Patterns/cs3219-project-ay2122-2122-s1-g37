@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useParams } from "react-router";
 import Chatbox from "../../components/ChatBox/Chatbox";
 import RoomSettings from "../../components/RoomSettings/RoomSettings";
 import VideoLinker from "../../components/VideoLinker/VideoLinker";
@@ -42,6 +43,7 @@ function Room() {
 	const [playerState, setPlayerState] = useState(initialPlayerState);
 	const [users, setUsers] = useState(initialUsers);
 	const [settings, setSettings] = useState(initialSettings);
+	const { id } = useParams();
 
 	// SOCKET.IO related stuff will be handled here
 
@@ -82,7 +84,7 @@ function Room() {
 			<div className="room-sidebar">
 				<VideoLinker linkCallback={linkCallback} />
 				<Watchmates users={users} />
-				<Chatbox />
+				<Chatbox roomId={id} />
 				<RoomSettings
 					capacity={settings.capacity}
 					users={settings.users}

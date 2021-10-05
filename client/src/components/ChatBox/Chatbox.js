@@ -4,7 +4,7 @@ import ChatboxWrapper from "./Chatbox.styled";
 import ChatContent from "./ChatContent";
 import ChatInput from "./ChatInput";
 
-function Chatbox() {
+function Chatbox({ roomId }) {
 	const [messages, setMessages] = useState([]);
 
 	const receiveMessage = useCallback(
@@ -23,26 +23,28 @@ function Chatbox() {
 		(msg) => {
 			const taggedMsg = `${socket.id}: ${msg}`;
 			receiveMessage(taggedMsg);
-			socket.emit("send-message", taggedMsg);
+			socket.emit("send-message", taggedMsg, roomId);
 		},
-		[receiveMessage]
+		[receiveMessage, roomId]
 	);
 
-	const joinMessage = useCallback(() => {
-		const msg = `${socket.id} has joined the chat`;
-		receiveMessage(msg);
-		socket.emit("send-message", msg);
-	}, [sendMessage]);
+	const initialize = useCallback(() => {
+		socket.emit("join-room", roomId, () => {
+			const msg = `${socket.id} has joined the chat`;
+			receiveMessage(msg);
+			socket.emit("send-message", msg, roomId);
+		});
+	}, [receiveMessage, roomId]);
 
 	// Reset socket event handlers when Chatbox re-render
 	useEffect(() => {
-		socket.on("connect", joinMessage);
+		socket.on("connect", initialize);
 		socket.on("receive-message", receiveMessage);
 		return () => {
-			socket.off("connect", joinMessage);
+			socket.off("connect", initialize);
 			socket.off("receive-message", receiveMessage);
 		};
-	}, [joinMessage, receiveMessage]);
+	}, [initialize, receiveMessage]);
 
 	return (
 		<ChatboxWrapper className="chatbox">

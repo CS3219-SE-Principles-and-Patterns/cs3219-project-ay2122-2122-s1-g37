@@ -3,22 +3,23 @@ module.exports = (io) => {
 		console.log(socket.id);
 
 		// Upon client sending message.
-		socket.on("send-message", (msg) => {
+		socket.on("send-message", (msg, roomId) => {
 			console.log(`Message received: ${msg}`);
-			socket.broadcast.emit("receive-message", msg);
-
 			// if no room. Should not happen. Should prevent this from happening.
-			// if (room === "") {
-			// 	console.log("no room should not be able to send");
-			// } else {
-			// 	socket.to(room).emit("msg-to-client", msg);
-			// }
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("receive-message", msg);
+				console.log(`Message sent to room ${roomId}`);
+			}
 		});
 
 		// join the client to the room "number" received.
 		// I cannot call callback? Idk.
-		socket.on("join-room", (room, cb) => {
-			socket.join(room);
+		socket.on("join-room", (roomId, callback) => {
+			console.log(`${socket.id} has joined the room ${roomId}`);
+			socket.join(roomId);
+			callback();
 		});
 	});
 };
