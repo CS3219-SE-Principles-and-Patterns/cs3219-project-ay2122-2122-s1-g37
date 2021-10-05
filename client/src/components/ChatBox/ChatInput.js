@@ -6,10 +6,7 @@ function ChatInput({ onSubmit }) {
 
 	const submitMsg = (e) => {
 		e.preventDefault();
-		onSubmit("You: " + inputRef.current.value);
-
-		// send message to server.
-		// socket.emit("msg-to-server", id + ": " + inputRef.current.value, tempRoom);
+		onSubmit(inputRef.current.value);
 		inputRef.current.value = "";
 	};
 

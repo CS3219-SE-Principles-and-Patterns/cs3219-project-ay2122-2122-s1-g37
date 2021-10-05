@@ -5,7 +5,6 @@ import VideoLinker from "../../components/VideoLinker/VideoLinker";
 import VideoPlayer from "../../components/VideoPlayer/VideoPlayer";
 import Watchmates from "../../components/Watchmates/Watchmates";
 import RoomPageWrapper from "./Room.styled";
-import { io } from "socket.io-client";
 
 const initialPlayerState = {
 	url: "https://www.youtube.com/watch?v=YHXB1xp-xXc",
@@ -38,25 +37,6 @@ const initialSettings = {
 		{ id: 8, name: "User8", canChat: false, canVideo: true },
 	],
 };
-
-// I believe this should be changed to only connect when on the page. I not sure how yet. Or dunnid, idk.
-const socket = io("http://localhost:5000");
-
-// Upon socket connection? Ps, I just start, dk how clean up yet.
-socket.on("connect", () => {
-	console.log(socket.id);
-	// id = socket.id;
-	// onSubmit(id + " connected to server");
-	// this is to join a certain room, which should be done right after room creation.
-	// socket.emit("join-room", tempRoom, () => {
-	// 	console.log("callback?");
-	// });
-});
-
-// Upon receiving message from server.
-socket.on("msg-to-client", (msg) => {
-	// onSubmit(msg);
-});
 
 function Room() {
 	const [playerState, setPlayerState] = useState(initialPlayerState);
