@@ -1,7 +1,5 @@
 module.exports = (io) => {
 	io.on("connection", (socket) => {
-		console.log(socket.id);
-
 		// Upon client sending message.
 		socket.on("send-message", (msg, roomId) => {
 			console.log(`Message received: ${msg}`);

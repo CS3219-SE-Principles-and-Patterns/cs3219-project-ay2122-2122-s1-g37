@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import socket from "../../services/socket";
 import ChatboxWrapper from "./Chatbox.styled";
 import ChatContent from "./ChatContent";
 import ChatInput from "./ChatInput";
 
-function Chatbox({ roomId }) {
+function Chatbox({ socket, roomId }) {
 	const [messages, setMessages] = useState([]);
 
 	const receiveMessage = useCallback(
@@ -25,7 +24,7 @@ function Chatbox({ roomId }) {
 			receiveMessage(taggedMsg);
 			socket.emit("send-message", taggedMsg, roomId);
 		},
-		[receiveMessage, roomId]
+		[receiveMessage, socket, roomId]
 	);
 
 	const initialize = useCallback(() => {
@@ -34,7 +33,7 @@ function Chatbox({ roomId }) {
 			receiveMessage(msg);
 			socket.emit("send-message", msg, roomId);
 		});
-	}, [receiveMessage, roomId]);
+	}, [receiveMessage, socket, roomId]);
 
 	// Reset socket event handlers when Chatbox re-render
 	useEffect(() => {
@@ -44,7 +43,7 @@ function Chatbox({ roomId }) {
 			socket.off("connect", initialize);
 			socket.off("receive-message", receiveMessage);
 		};
-	}, [initialize, receiveMessage]);
+	}, [socket, initialize, receiveMessage]);
 
 	return (
 		<ChatboxWrapper className="chatbox">
