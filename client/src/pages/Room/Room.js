@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router";
 import Chatbox from "../../components/ChatBox/Chatbox";
 import RoomSettings from "../../components/RoomSettings/RoomSettings";
@@ -8,6 +8,7 @@ import Watchmates from "../../components/Watchmates/Watchmates";
 import RoomPageWrapper from "./Room.styled";
 import { io } from "socket.io-client";
 import URL from "../../util/url";
+import { useLocation } from "react-router-dom";
 
 const initialPlayerState = {
 	url: "https://www.youtube.com/playlist?list=PL8PZB25uZuZ7gOShaethulz7JaLCyk9Tp",
@@ -41,14 +42,17 @@ const initialSettings = {
 	],
 };
 
+// Persist sockets through global scope
+const sockets = {
+	chat: null,
+	video: null,
+};
+
 function Room() {
 	const { id } = useParams();
 	const [playerState, setPlayerState] = useState(initialPlayerState);
 	const [users, setUsers] = useState(initialUsers);
 	const [settings, setSettings] = useState(initialSettings);
-
-	// Solely for the Room page
-	const [socket] = useState(io(URL.LOCAL_SERVER_URL));
 
 	const playCallback = () => {
 		console.log("VIDEO PLAYS");
@@ -73,6 +77,16 @@ function Room() {
 		// Broadcast settings to all other users;
 	};
 
+	// Initialize sockets
+	useEffect(() => {
+		sockets.chat = io(URL.LOCAL_SERVER_URL + "/chat");
+		sockets.video = io(URL.LOCAL_SERVER_URL + "/video");
+		return () => {
+			sockets.chat.disconnect();
+			sockets.video.disconnect();
+		};
+	}, []);
+
 	return (
 		<RoomPageWrapper>
 			<div className="room-player">
@@ -87,7 +101,7 @@ function Room() {
 			<div className="room-sidebar">
 				<VideoLinker linkCallback={linkCallback} />
 				<Watchmates users={users} />
-				<Chatbox socket={socket} roomId={id} />
+				<Chatbox socket={sockets.chat} roomId={id} />
 				<RoomSettings
 					capacity={settings.capacity}
 					users={settings.users}
