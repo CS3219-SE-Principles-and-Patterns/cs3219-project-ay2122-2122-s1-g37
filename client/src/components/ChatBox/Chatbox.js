@@ -38,7 +38,7 @@ function Chatbox({ socket, roomId }) {
 	// Reset socket event handlers when Chatbox re-render
 	useEffect(() => {
 		if (socket) {
-			console.log("ping ping");
+			socket.on("connect", initialize);
 			socket.on("receive-message", receiveMessage);
 			return () => {
 				socket.off("connect", initialize);
