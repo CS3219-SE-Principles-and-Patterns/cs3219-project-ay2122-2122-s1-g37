@@ -10,7 +10,7 @@ import { io } from "socket.io-client";
 import URL from "../../util/url";
 
 const initialPlayerState = {
-	url: "https://www.youtube.com/playlist?list=PL8PZB25uZuZ7gOShaethulz7JaLCyk9Tp",
+	url: "https://www.youtube.com/watch?v=q5WbrPwidrY",
 	playing: true,
 	syncTime: 0,
 	syncType: "seconds",
@@ -50,22 +50,10 @@ function Room() {
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
 
-	const playCallback = () => {
-		console.log("VIDEO PLAYS");
-		// Broadcast PLAY event to all other users
-	};
-
-	const pauseCallback = () => {
-		console.log("VIDEO PAUSES");
-		// Broadcast PAUSE event to all other users
-	};
-
-	// To-do: Handling SEEK event. YouTube API does not provide SEEK directly
-	// Save progress when PAUSE happens and compare progresses when PLAY happens
+	// Handles the interaction between different components here
 
 	const linkCallback = (url) => {
 		setPlayerState({ ...playerState, url });
-		// Broadcast new link to all other users
 	};
 
 	const saveCallback = () => {
@@ -90,11 +78,7 @@ function Room() {
 		<RoomPageWrapper>
 			<div className="room-player">
 				<div className="room-res-wrapper">
-					<VideoPlayer
-						{...playerState}
-						playCallback={playCallback}
-						pauseCallback={pauseCallback}
-					/>
+					<VideoPlayer {...playerState} socket={videoSocket} roomId={id} />
 				</div>
 			</div>
 			<div className="room-sidebar">

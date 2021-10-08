@@ -4,16 +4,23 @@ module.exports = (io) => {
 	videoIO.on("connection", (socket) => {
 		console.log(`${socket.id} connected to videoIO`);
 
-		// 1. Send link to all
-		socket.on("send-url", (url, roomId) => {
+		// 1. Join room via id
+		socket.on("join-room", (roomId, callback) => {
+			console.log(`${socket.id} has joined the video room ${roomId}`);
+			socket.join(roomId);
+			callback();
+		});
+
+		// 2. Send link to all
+		socket.on("SEND_URL", (roomId, url) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
 			} else {
-				socket.to(roomId).emit("receive-url", url);
-				console.log(`URL sent to room ${roomId}`);
+				socket.to(roomId).emit("RECEIVE_URL", url);
+				console.log(`${url} sent to room ${roomId}`);
 			}
 		});
 
-		// 2. Host send timing to other users
+		// 3. Host send timing to other users
 	});
 };
