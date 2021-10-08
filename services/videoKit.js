@@ -11,7 +11,7 @@ module.exports = (io) => {
 			callback();
 		});
 
-		// 2. Send link to all
+		// 2. Broadcast URL to all
 		socket.on("SEND_URL", (roomId, url) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
@@ -21,6 +21,14 @@ module.exports = (io) => {
 			}
 		});
 
-		// 3. Host send timing to other users
+		// 3. Broadcast timing to all users
+		socket.on("SEND_TIMING", (roomId, timing) => {
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("RECEIVE_TIMING", timing);
+				console.log(`${timing} sent to room ${roomId}`);
+			}
+		});
 	});
 };

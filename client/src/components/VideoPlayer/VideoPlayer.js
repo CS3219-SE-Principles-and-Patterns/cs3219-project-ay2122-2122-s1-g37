@@ -8,7 +8,7 @@ const initialState = {
 	syncType: "seconds",
 };
 
-function VideoPlayer({ socket, roomId, url, playing }) {
+function VideoPlayer({ socket, roomId, url }) {
 	const [videoUrl, setVideoUrl] = useState(initialState.url);
 
 	// Initialize upon connecting
@@ -29,17 +29,21 @@ function VideoPlayer({ socket, roomId, url, playing }) {
 		if (socket && url) {
 			// Self: Update state
 			setVideoUrl(url);
-			// Host: Broadcast new URL to all
+			// Self: Broadcast new URL to all
 			if (url !== initialState.url) {
 				socket.emit("SEND_URL", roomId, url);
 			}
-			// Host: Update DB's URL
+			// Self: Update DB's URL
 		}
 	}, [socket, roomId, url]);
 
-	// Broadcast TIMING to all other users
-	const timingCallback = () => {
+	// Receiving and broadcasting TIMING
+	const receiveTiming = ({ timing }) => {
+		console.log(`Sync at ${timing}`);
+	};
+	const timingCallback = ({ playedSeconds }) => {
 		// Host: Broadcast timing every second
+		socket.emit("SEND_TIMING", roomId, { timing: playedSeconds });
 		// Host: Update DB's timing every 10 seconds
 	};
 
@@ -83,9 +87,11 @@ function VideoPlayer({ socket, roomId, url, playing }) {
 		if (socket) {
 			socket.on("connect", initialize);
 			socket.on("RECEIVE_URL", receiveUrl);
+			socket.on("RECEIVE_TIMING", receiveTiming);
 			return () => {
 				socket.off("connect", initialize);
 				socket.off("RECEIVE_URL", receiveUrl);
+				socket.off("RECEIVE_TIMING", receiveTiming);
 			};
 		}
 	}, [socket, initialize, receiveUrl]);
@@ -102,6 +108,7 @@ function VideoPlayer({ socket, roomId, url, playing }) {
 			muted
 			onPlay={playCallback}
 			onPause={pauseCallback}
+			onProgress={timingCallback}
 		/>
 	);
 }
