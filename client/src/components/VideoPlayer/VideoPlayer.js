@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player/youtube";
 
 const initialState = {
@@ -10,13 +10,24 @@ const initialState = {
 
 function VideoPlayer({ socket, roomId, url }) {
 	const [videoUrl, setVideoUrl] = useState(initialState.url);
+	const [isHost, setIsHost] = useState(false);
+	const playerRef = useRef(null);
 
 	// Initialize upon connecting
 	const initialize = useCallback(() => {
-		socket.emit("join-room", roomId, () => {
-			console.log(`${socket.id} has joined the video room ${roomId}`);
+		socket.emit("join-room", roomId, (isNewHost) => {
+			console.log(`${socket.id} has joined the video room ${isNewHost && "as a host"}`);
+			setIsHost(isNewHost);
 		});
 	}, [socket, roomId]);
+
+	// Changing host status
+	const toggleHost = useCallback(
+		(isNewHost) => {
+			setIsHost(isNewHost);
+		},
+		[setIsHost]
+	);
 
 	// Receiving and broadcasting URLs
 	const receiveUrl = useCallback(
@@ -39,7 +50,10 @@ function VideoPlayer({ socket, roomId, url }) {
 
 	// Receiving and broadcasting TIMING
 	const receiveTiming = ({ timing }) => {
-		console.log(`Sync at ${timing}`);
+		if (playerRef) {
+			console.log(playerRef.current.getDuration());
+			// console.log(`Sync timing: ${timing} / Current timing: ${playerRef.getDuration()}`);
+		}
 	};
 	const timingCallback = ({ playedSeconds }) => {
 		// Host: Broadcast timing every second
@@ -86,10 +100,12 @@ function VideoPlayer({ socket, roomId, url }) {
 	useEffect(() => {
 		if (socket) {
 			socket.on("connect", initialize);
+			socket.on("HOST_STATUS", toggleHost);
 			socket.on("RECEIVE_URL", receiveUrl);
 			socket.on("RECEIVE_TIMING", receiveTiming);
 			return () => {
 				socket.off("connect", initialize);
+				socket.off("HOST_STATUS", toggleHost);
 				socket.off("RECEIVE_URL", receiveUrl);
 				socket.off("RECEIVE_TIMING", receiveTiming);
 			};
@@ -99,6 +115,7 @@ function VideoPlayer({ socket, roomId, url }) {
 	return (
 		<ReactPlayer
 			className="react-player"
+			ref={playerRef}
 			width="100%"
 			height="100%"
 			url={videoUrl}

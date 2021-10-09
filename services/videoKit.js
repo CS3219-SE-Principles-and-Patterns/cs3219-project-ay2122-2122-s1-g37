@@ -1,3 +1,8 @@
+// Mapping a socket to the room it is in
+const socketRoomMap = new Map();
+// Mapping a room to all the sockets in the room
+const roomSocketMap = new Map();
+
 module.exports = (io) => {
 	const videoIO = io.of("/video");
 
@@ -8,7 +13,29 @@ module.exports = (io) => {
 		socket.on("join-room", (roomId, callback) => {
 			console.log(`${socket.id} has joined the video room ${roomId}`);
 			socket.join(roomId);
-			callback();
+
+			// Update mapping
+			socketRoomMap.set(socket.id, roomId);
+			if (roomSocketMap.has(roomId)) {
+				roomSocketMap.set(roomId, [...roomSocketMap.get(roomId), socket.id]);
+			} else {
+				roomSocketMap.set(roomId, [socket.id]);
+			}
+
+			// Return whether the new socket is a host
+			callback(roomSocketMap.get(roomId).length == 1);
+		});
+
+		socket.on("disconnect", () => {
+			if (socketRoomMap.has(socket.id) && roomSocketMap.has(socketRoomMap.get(socket.id))) {
+				const roomId = socketRoomMap.get(socket.id);
+				const newSockets = roomSocketMap.get(roomId).filter((id) => id != socket.id);
+				roomSocketMap.set(roomId, newSockets);
+
+				if (newSockets.length > 0) {
+					videoIO.to(newSockets[0]).emit("HOST_STATUS", true);
+				}
+			}
 		});
 
 		// 2. Broadcast URL to all
