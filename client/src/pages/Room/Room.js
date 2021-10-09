@@ -16,17 +16,6 @@ const initialPlayerState = {
 	syncType: "seconds",
 };
 
-const initialUsers = [
-	{ id: 1, name: "User1", isHost: true },
-	{ id: 2, name: "User2", isHost: false },
-	{ id: 3, name: "User3", isHost: false },
-	{ id: 4, name: "User4", isHost: false },
-	{ id: 5, name: "User5", isHost: false },
-	{ id: 6, name: "User6", isHost: false },
-	{ id: 7, name: "User7", isHost: false },
-	{ id: 8, name: "User8", isHost: false },
-];
-
 const initialSettings = {
 	capacity: 15,
 	users: [
@@ -44,7 +33,6 @@ const initialSettings = {
 function Room() {
 	const { id } = useParams();
 	const [playerState, setPlayerState] = useState(initialPlayerState);
-	const [users, setUsers] = useState(initialUsers);
 	const [settings, setSettings] = useState(initialSettings);
 
 	const [chatSocket, setChatSocket] = useState(null);
@@ -83,7 +71,7 @@ function Room() {
 			</div>
 			<div className="room-sidebar">
 				<VideoLinker linkCallback={linkCallback} />
-				<Watchmates users={users} />
+				<Watchmates socket={chatSocket} roomId={id} />
 				<Chatbox socket={chatSocket} roomId={id} />
 				<RoomSettings
 					capacity={settings.capacity}
