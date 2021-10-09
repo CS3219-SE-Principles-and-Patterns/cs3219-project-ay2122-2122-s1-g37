@@ -29,10 +29,10 @@ function VideoPlayer({ socket, roomId, url }) {
 			if (isNewHost) {
 				setVideoUrl(initialState.url);
 			}
-
-			// Non-host: Load up URL from the room info and indicate that player is desync-ed
+			// Non-host: Load up URL from the room info and request for a sync
 			if (!isNewHost) {
 				// To-do: Load up URL from room info into the player
+				// setVideoUrl(...);
 
 				setIsDesync(true);
 			}
@@ -81,7 +81,6 @@ function VideoPlayer({ socket, roomId, url }) {
 		if (isHost) {
 			socket.emit("SEND_TIMING", roomId, { timing: playedSeconds });
 		}
-
 		// Host: Update DB's timing every 10 seconds
 	};
 
