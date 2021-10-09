@@ -104,8 +104,12 @@ function VideoPlayer({ socket, roomId, url }) {
 	};
 
 	// Broadcast BUFFERING event to all other users
-	const bufferCallback = () => {
-		console.log("BUFFERING");
+	const bufferStartCallback = () => {
+		console.log("BUFFERING/LOADING STARTS");
+	};
+
+	const bufferEndCallback = () => {
+		console.log("BUFFERING/LOADING ENDS");
 	};
 
 	// Broadcast SPEED_CHANGE event to all other users
@@ -158,6 +162,9 @@ function VideoPlayer({ socket, roomId, url }) {
 			onPlay={playCallback}
 			onPause={pauseCallback}
 			onProgress={timingCallback}
+			onReady={bufferStartCallback}
+			onBuffer={bufferStartCallback}
+			onBufferEnd={bufferEndCallback}
 		/>
 	);
 }
