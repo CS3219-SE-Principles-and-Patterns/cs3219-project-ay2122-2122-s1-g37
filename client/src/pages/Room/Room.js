@@ -10,7 +10,7 @@ import { io } from "socket.io-client";
 import URL from "../../util/url";
 
 const initialPlayerState = {
-	url: "https://www.youtube.com/watch?v=q5WbrPwidrY",
+	url: "",
 	playing: true,
 	syncTime: 0,
 	syncType: "seconds",

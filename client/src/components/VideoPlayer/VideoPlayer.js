@@ -1,40 +1,52 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player/youtube";
 
-const initialState = {
-	url: "https://www.youtube.com/watch?v=q5WbrPwidrY",
-	playing: true,
-	syncTime: 0,
-	syncType: "seconds",
+const placeholderRoomInfo = {
+	id: 1,
+	hostId: 1,
+	capacity: 15,
+	url: "",
+	elapsedTime: 0,
+};
+const fallbackURL = "https://www.youtube.com/watch?v=q5WbrPwidrY";
+const timeout = (ms) => {
+	return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 const UNAVALIABLE = -1;
 
 function VideoPlayer({ socket, roomId, url }) {
-	const [videoUrl, setVideoUrl] = useState(initialState.url);
+	const [videoUrl, setVideoUrl] = useState("");
 	const [isHost, setIsHost] = useState(false);
 	const [isDesync, setIsDesync] = useState(false);
 	const [syncTime, setSyncTime] = useState(UNAVALIABLE);
 	const playerRef = useRef(null);
 
 	// Initialize upon connecting
-	const initialize = useCallback(() => {
-		socket.emit("join-room", roomId, (isNewHost) => {
+	const initialize = useCallback(async () => {
+		socket.emit("join-room", roomId, async (isNewHost) => {
 			console.log(`${socket.id} has joined the video room ${isNewHost ? "as a host" : ""}`);
 			setIsHost(isNewHost);
 
 			// To-do: Fetch room info from DB
+			const [roomInfo] = await Promise.all([placeholderRoomInfo, timeout(5000)]);
 
-			// Host: Load up placeholder video
-			if (isNewHost) {
-				setVideoUrl(initialState.url);
+			if (roomInfo.url.length > 0) {
+				// Load up URL from the room info
+				setVideoUrl(roomInfo.url);
+				console.log(`${socket.id} found URL for the room ${roomId}, loading it to player`);
+			} else {
+				// Load up placeholder video if DB has no URL
+				setVideoUrl(fallbackURL);
+				console.log(
+					`${socket.id} cannot found URL for the room ${roomId}, using fallback...`
+				);
 			}
-			// Non-host: Load up URL from the room info and request for a sync
-			if (!isNewHost) {
-				// To-do: Load up URL from room info into the player
-				// setVideoUrl(...);
 
+			// Sync to host
+			if (!isNewHost) {
 				setIsDesync(true);
+				console.log(`${socket.id} requests to sync with host`);
 			}
 		});
 	}, [socket, roomId]);
@@ -56,13 +68,14 @@ function VideoPlayer({ socket, roomId, url }) {
 	);
 	useEffect(() => {
 		if (socket && url) {
+			console.log(`ping w/ ${url}`);
 			// Self: Update state
 			setVideoUrl(url);
 			// Self: Broadcast new URL to all
-			if (url !== initialState.url) {
+			if (url !== fallbackURL) {
 				socket.emit("SEND_URL", roomId, url);
 			}
-			// Self: Update DB's URL
+			// Self: To-do - Update DB's URL
 		}
 	}, [socket, roomId, url]);
 
