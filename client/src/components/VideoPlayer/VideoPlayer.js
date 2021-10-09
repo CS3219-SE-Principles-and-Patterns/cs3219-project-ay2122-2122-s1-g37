@@ -16,7 +16,7 @@ function VideoPlayer({ socket, roomId, url }) {
 	// Initialize upon connecting
 	const initialize = useCallback(() => {
 		socket.emit("join-room", roomId, (isNewHost) => {
-			console.log(`${socket.id} has joined the video room ${isNewHost && "as a host"}`);
+			console.log(`${socket.id} has joined the video room ${isNewHost ? "as a host" : ""}`);
 			setIsHost(isNewHost);
 		});
 	}, [socket, roomId]);
@@ -49,15 +49,20 @@ function VideoPlayer({ socket, roomId, url }) {
 	}, [socket, roomId, url]);
 
 	// Receiving and broadcasting TIMING
-	const receiveTiming = ({ timing }) => {
-		if (playerRef) {
-			console.log(playerRef.current.getDuration());
-			// console.log(`Sync timing: ${timing} / Current timing: ${playerRef.getDuration()}`);
-		}
-	};
+	const receiveTiming = useCallback(
+		({ timing }) => {
+			if (!isHost) {
+				console.log(`Receive timing of ${timing}`);
+			}
+		},
+		[playerRef, isHost]
+	);
 	const timingCallback = ({ playedSeconds }) => {
 		// Host: Broadcast timing every second
-		socket.emit("SEND_TIMING", roomId, { timing: playedSeconds });
+		if (isHost) {
+			socket.emit("SEND_TIMING", roomId, { timing: playedSeconds });
+		}
+
 		// Host: Update DB's timing every 10 seconds
 	};
 
@@ -110,7 +115,7 @@ function VideoPlayer({ socket, roomId, url }) {
 				socket.off("RECEIVE_TIMING", receiveTiming);
 			};
 		}
-	}, [socket, initialize, receiveUrl]);
+	}, [socket, initialize, receiveUrl, receiveTiming, toggleHost]);
 
 	return (
 		<ReactPlayer

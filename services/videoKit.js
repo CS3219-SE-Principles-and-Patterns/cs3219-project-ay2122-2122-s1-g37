@@ -54,7 +54,7 @@ module.exports = (io) => {
 				console.log(`Invalid room ID: ${roomId}`);
 			} else {
 				socket.to(roomId).emit("RECEIVE_TIMING", timing);
-				console.log(`${timing} sent to room ${roomId}`);
+				console.log(`${socket.id} sent a timing of ${timing.timing} to room ${roomId}`);
 			}
 		});
 	});
