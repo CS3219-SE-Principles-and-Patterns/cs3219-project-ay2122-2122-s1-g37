@@ -8,9 +8,13 @@ const initialState = {
 	syncType: "seconds",
 };
 
+const UNAVALIABLE = -1;
+
 function VideoPlayer({ socket, roomId, url }) {
 	const [videoUrl, setVideoUrl] = useState(initialState.url);
 	const [isHost, setIsHost] = useState(false);
+	const [isDesync, setIsDesync] = useState(false);
+	const [syncTime, setSyncTime] = useState(UNAVALIABLE);
 	const playerRef = useRef(null);
 
 	// Initialize upon connecting
@@ -18,6 +22,20 @@ function VideoPlayer({ socket, roomId, url }) {
 		socket.emit("join-room", roomId, (isNewHost) => {
 			console.log(`${socket.id} has joined the video room ${isNewHost ? "as a host" : ""}`);
 			setIsHost(isNewHost);
+
+			// To-do: Fetch room info from DB
+
+			// Host: Load up placeholder video
+			if (isNewHost) {
+				setVideoUrl(initialState.url);
+			}
+
+			// Non-host: Load up URL from the room info and indicate that player is desync-ed
+			if (!isNewHost) {
+				// To-do: Load up URL from room info into the player
+
+				setIsDesync(true);
+			}
 		});
 	}, [socket, roomId]);
 
@@ -53,9 +71,10 @@ function VideoPlayer({ socket, roomId, url }) {
 		({ timing }) => {
 			if (!isHost) {
 				console.log(`Receive timing of ${timing}`);
+				setSyncTime(timing);
 			}
 		},
-		[playerRef, isHost]
+		[isHost]
 	);
 	const timingCallback = ({ playedSeconds }) => {
 		// Host: Broadcast timing every second
@@ -116,6 +135,15 @@ function VideoPlayer({ socket, roomId, url }) {
 			};
 		}
 	}, [socket, initialize, receiveUrl, receiveTiming, toggleHost]);
+
+	// Sync to latest timing if the player ever goes desync
+	useEffect(() => {
+		if (socket && isDesync && syncTime !== UNAVALIABLE) {
+			console.log(`${socket.id} is behind, syncing to ${syncTime}`);
+			playerRef.current.seekTo(syncTime, "seconds");
+			setIsDesync(false);
+		}
+	}, [socket, isDesync, syncTime]);
 
 	return (
 		<ReactPlayer
