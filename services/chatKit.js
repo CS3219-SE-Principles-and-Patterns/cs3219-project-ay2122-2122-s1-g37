@@ -2,15 +2,10 @@ const retrieveUserLists = () => {
 	//some way to retrieve current user list from DB?
 }
 
-let userLists = new Map();
-
-const retrieveRoomUserList = (roomId) => {
-	if (userLists.has(roomId)) {
-		return userLists.get(roomId);
-	} else {
-		return [];
-	}
-}
+// Mapping a socket to the room it is in
+const socketRoomMap = new Map();
+// Mapping a room to all the sockets in the room
+const roomSocketMap = new Map();
 
 module.exports = (io) => {
 	const chatIO = io.of("/chat");
@@ -35,33 +30,45 @@ module.exports = (io) => {
 		// join the client to the room "number" received.
 		socket.on("join-room", (roomId, callback) => {
 			console.log(`${socket.id} has joined the room ${roomId}`);
-			// idk a better way to do this.
-			userRoomId = roomId;
 			socket.join(roomId);
 			
-			// retrieve the user list and add this client inside
-			
-			let userList = retrieveRoomUserList(roomId);
-			userList.push({ id: userList.length + 1, name: `${socket.id}`, isHost: false });
-			userLists.set(roomId, userList);
+			// Update mapping
+			socketRoomMap.set(socket.id, roomId);
+			let userList;
+			if (roomSocketMap.has(roomId)) {
+				userList = roomSocketMap.get(roomId);
+				userList.push({ id: socket.id, name: `${socket.id}`, isHost: userList.length == 0 });
+				roomSocketMap.set(roomId, userList);
+			} else {
+				roomSocketMap.set(roomId, [{ id: socket.id, name: `${socket.id}`, isHost: true }]);
+				userList = roomSocketMap.get(roomId);
+			}
+
 			socket.to(roomId).emit("update-user-list", userList);
 			socket.emit("update-user-list", userList);
-			
 			callback();
 		});
 		
 		socket.on('disconnect', function(){
-			socket.to(userRoomId).emit("receive-message", `${socket.id} has left the chat`);
-			
-			let userList = retrieveRoomUserList(userRoomId);
-			// might have better way. Find or idk man.
-			for (var i = 0; i < userList.length; i++) {
-				if (userList[i].name == `${socket.id}`) {
-					userList.splice(i, 1);
+			if (socketRoomMap.has(socket.id) && roomSocketMap.has(socketRoomMap.get(socket.id))) {
+				const roomId = socketRoomMap.get(socket.id);
+				socket.to(roomId).emit("receive-message", `${socket.id} has left the chat`);
+				
+				let userList = roomSocketMap.get(roomId);
+				// might have better way. Find or idk man.
+				for (var i = 0; i < userList.length; i++) {
+					if (userList[i].name == `${socket.id}`) {
+						userList.splice(i, 1);
+					}
 				}
+				
+				if (userList.length > 0) {
+					userList[0].isHost = true;
+				}
+				
+				roomSocketMap.set(roomId, userList);
+				socket.to(roomId).emit("update-user-list", userList);
 			}
-			userLists.set(userRoomId, userList);
-			socket.to(userRoomId).emit("update-user-list", userList);
 		});
 	});
 };
