@@ -15,21 +15,19 @@ const timeout = (ms) => {
 
 const UNAVALIABLE = -1;
 
-function VideoPlayer({ socket, roomId, url }) {
+function VideoPlayer({ socket, roomId, user, url }) {
 	const [videoUrl, setVideoUrl] = useState("");
-	const [isHost, setIsHost] = useState(false);
 	const [isDesync, setIsDesync] = useState(false);
 	const [syncTime, setSyncTime] = useState(UNAVALIABLE);
 	const playerRef = useRef(null);
 
 	// Initialize upon connecting
 	const initialize = useCallback(async () => {
-		socket.emit("join-room", roomId, async (isNewHost) => {
-			console.log(`${socket.id} has joined the video room ${isNewHost ? "as a host" : ""}`);
-			setIsHost(isNewHost);
+		socket.emit("join-room", roomId, async () => {
+			console.log(`${socket.id} has joined the video room`);
 
 			// To-do: Fetch room info from DB
-			const [roomInfo] = await Promise.all([placeholderRoomInfo, timeout(5000)]);
+			const [roomInfo] = await Promise.all([placeholderRoomInfo, timeout(1000)]);
 
 			if (roomInfo.url.length > 0) {
 				// Load up URL from the room info
@@ -43,21 +41,9 @@ function VideoPlayer({ socket, roomId, url }) {
 				);
 			}
 
-			// Sync to host
-			if (!isNewHost) {
-				setIsDesync(true);
-				console.log(`${socket.id} requests to sync with host`);
-			}
+			setIsDesync(true);
 		});
 	}, [socket, roomId]);
-
-	// Changing host status
-	const toggleHost = useCallback(
-		(isNewHost) => {
-			setIsHost(isNewHost);
-		},
-		[setIsHost]
-	);
 
 	// Receiving and broadcasting URLs
 	const receiveUrl = useCallback(
@@ -82,16 +68,17 @@ function VideoPlayer({ socket, roomId, url }) {
 	// Receiving and broadcasting TIMING
 	const receiveTiming = useCallback(
 		({ timing }) => {
-			if (!isHost) {
+			if (!user.isHost) {
 				console.log(`Receive timing of ${timing}`);
 				setSyncTime(timing);
 			}
 		},
-		[isHost]
+		[user.isHost]
 	);
 	const timingCallback = ({ playedSeconds }) => {
 		// Host: Broadcast timing every second
-		if (isHost) {
+		if (user.isHost) {
+			console.log(`Sending timing of ${playedSeconds}`);
 			socket.emit("SEND_TIMING", roomId, { timing: playedSeconds });
 		}
 		// Host: Update DB's timing every 10 seconds
@@ -140,26 +127,26 @@ function VideoPlayer({ socket, roomId, url }) {
 	useEffect(() => {
 		if (socket) {
 			socket.on("connect", initialize);
-			socket.on("HOST_STATUS", toggleHost);
 			socket.on("RECEIVE_URL", receiveUrl);
 			socket.on("RECEIVE_TIMING", receiveTiming);
 			return () => {
 				socket.off("connect", initialize);
-				socket.off("HOST_STATUS", toggleHost);
 				socket.off("RECEIVE_URL", receiveUrl);
 				socket.off("RECEIVE_TIMING", receiveTiming);
 			};
 		}
-	}, [socket, initialize, receiveUrl, receiveTiming, toggleHost]);
+	}, [socket, initialize, receiveUrl, receiveTiming]);
 
 	// Sync to latest timing if the player ever goes desync
 	useEffect(() => {
-		if (socket && isDesync && syncTime !== UNAVALIABLE) {
+		if (user && user.isHost) {
+			setIsDesync(false);
+		} else if (socket && isDesync && syncTime !== UNAVALIABLE) {
 			console.log(`${socket.id} is behind, syncing to ${syncTime}`);
 			playerRef.current.seekTo(syncTime, "seconds");
 			setIsDesync(false);
 		}
-	}, [socket, isDesync, syncTime]);
+	}, [socket, isDesync, syncTime, user]);
 
 	return (
 		<ReactPlayer

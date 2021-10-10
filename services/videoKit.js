@@ -22,8 +22,7 @@ module.exports = (io) => {
 				roomSocketMap.set(roomId, [socket.id]);
 			}
 
-			// Return whether the new socket is a host
-			callback(roomSocketMap.get(roomId).length == 1);
+			callback();
 		});
 
 		socket.on("disconnect", () => {
@@ -31,10 +30,6 @@ module.exports = (io) => {
 				const roomId = socketRoomMap.get(socket.id);
 				const newSockets = roomSocketMap.get(roomId).filter((id) => id != socket.id);
 				roomSocketMap.set(roomId, newSockets);
-
-				if (newSockets.length > 0) {
-					videoIO.to(newSockets[0]).emit("HOST_STATUS", true);
-				}
 			}
 		});
 
