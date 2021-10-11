@@ -17,12 +17,13 @@ const UNAVALIABLE = -1;
 
 function VideoPlayer({ socket, roomId, user, url }) {
 	const [videoUrl, setVideoUrl] = useState("");
-	const [isDesync, setIsDesync] = useState(false);
 	const [isPlaying, setIsPlaying] = useState(true);
+
+	const [isDesync, setIsDesync] = useState(false);
 	const [syncTime, setSyncTime] = useState(UNAVALIABLE);
-	const [ignoreNextBuffer, setIgnoreNextBuffer] = useState(false);
-	const [isFirstBuffer, setIsFirstBuffer] = useState(true);
 	const [buffererId, setBuffererId] = useState(UNAVALIABLE);
+	const [ignoreNextBuffer, setIgnoreNextBuffer] = useState(false);
+
 	const playerRef = useRef(null);
 
 	// Initialize upon connecting
@@ -46,7 +47,7 @@ function VideoPlayer({ socket, roomId, user, url }) {
 			}
 
 			setIsDesync(true);
-			console.log("Initial sync-ing up");
+			console.log("Initial sync up");
 		});
 	}, [socket, roomId]);
 
@@ -116,45 +117,36 @@ function VideoPlayer({ socket, roomId, user, url }) {
 	// Broadcast BUFFERING event to all other users
 	const hold = useCallback((sourceId) => {
 		console.log(`HOLD`);
+
 		setIsPlaying(false);
 		setBuffererId(sourceId);
 	}, []);
 	const bufferStartCallback = () => {
-		console.log(`BUFFER START`);
-		if (!ignoreNextBuffer) {
-			console.log("Is buffering, requesting all others to hold");
-			socket.emit("REQUEST_HOLD", roomId);
-			setBuffererId(socket.id);
-			setIgnoreNextBuffer(true);
-		} else {
+		// console.log(`BUFFER START`);
+
+		if (ignoreNextBuffer) {
+			// console.log("IGNORED");
 			setIgnoreNextBuffer(false);
+		} else if (buffererId === UNAVALIABLE) {
+			console.log("REQUESTING FOR HOLD");
+			socket.emit("REQUEST_HOLD", roomId, socket.id);
+			setBuffererId(socket.id);
 		}
 	};
 
 	const release = useCallback((newTiming) => {
 		console.log(`RELEASE`);
-
-		// if (isFirstBuffer) {
-		// setIsFirstBuffer(false);
-		// } else {
-		// 	setSyncTime(newTiming);
-		// }
-
+		setIgnoreNextBuffer(true);
+		playerRef.current.seekTo(newTiming, "seconds");
 		setIsPlaying(true);
-		setIsDesync(true);
+		setBuffererId(UNAVALIABLE);
 	}, []);
 	const bufferEndCallback = () => {
-		// if (!ignoreNextBuffer) {
-		console.log(`BUFFER END`);
-		if (socket.id === buffererId) {
-			console.log("Bufferer has stopped buffering, requesting all others to release");
+		if (buffererId === socket.id) {
+			console.log("REQUESTING FOR RELEASE");
 			socket.emit("REQUEST_RELEASE", roomId, playerRef.current.getCurrentTime());
 			setBuffererId(UNAVALIABLE);
 		}
-		// 	setIgnoreNextBuffer(true);
-		// } else {
-		// 	setIgnoreNextBuffer(false);
-		// }
 	};
 
 	// Broadcast SPEED_CHANGE event to all other users
@@ -193,13 +185,6 @@ function VideoPlayer({ socket, roomId, user, url }) {
 			playerRef.current.seekTo(syncTime, "seconds");
 			setIsDesync(false);
 		}
-		// if (user && user.isHost) {
-		// 	setIsDesync(false);
-		// } else if (socket && isDesync && syncTime !== UNAVALIABLE) {
-		// 	console.log(`${socket.id} is behind, syncing to ${syncTime}`);
-		// 	playerRef.current.seekTo(syncTime, "seconds");
-		// 	setIsDesync(false);
-		// }
 	}, [socket, isDesync, syncTime, user]);
 
 	return (
