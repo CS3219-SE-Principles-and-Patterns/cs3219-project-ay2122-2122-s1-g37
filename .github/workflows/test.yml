@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: 14.x
       - name: Update npm
-        run: npm update
+        run: npm install npm@latest -g
       - name: Install dependencies
         run: npm run install-all
       - name: Cypress run tests
