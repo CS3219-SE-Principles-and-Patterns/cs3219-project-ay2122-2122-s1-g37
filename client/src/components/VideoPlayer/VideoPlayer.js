@@ -18,7 +18,11 @@ const UNAVALIABLE = -1;
 function VideoPlayer({ socket, roomId, user, url }) {
 	const [videoUrl, setVideoUrl] = useState("");
 	const [isDesync, setIsDesync] = useState(false);
+	const [isPlaying, setIsPlaying] = useState(true);
 	const [syncTime, setSyncTime] = useState(UNAVALIABLE);
+	const [ignoreNextBuffer, setIgnoreNextBuffer] = useState(false);
+	const [isFirstBuffer, setIsFirstBuffer] = useState(true);
+	const [buffererId, setBuffererId] = useState(UNAVALIABLE);
 	const playerRef = useRef(null);
 
 	// Initialize upon connecting
@@ -42,6 +46,7 @@ function VideoPlayer({ socket, roomId, user, url }) {
 			}
 
 			setIsDesync(true);
+			console.log("Initial sync-ing up");
 		});
 	}, [socket, roomId]);
 
@@ -54,7 +59,6 @@ function VideoPlayer({ socket, roomId, user, url }) {
 	);
 	useEffect(() => {
 		if (socket && url) {
-			console.log(`ping w/ ${url}`);
 			// Self: Update state
 			setVideoUrl(url);
 			// Self: Broadcast new URL to all
@@ -69,7 +73,7 @@ function VideoPlayer({ socket, roomId, user, url }) {
 	const receiveTiming = useCallback(
 		({ timing }) => {
 			if (!user.isHost) {
-				console.log(`Receive timing of ${timing}`);
+				// console.log(`Receive timing of ${timing}`);
 				setSyncTime(timing);
 			}
 		},
@@ -78,7 +82,7 @@ function VideoPlayer({ socket, roomId, user, url }) {
 	const timingCallback = ({ playedSeconds }) => {
 		// Host: Broadcast timing every second
 		if (user.isHost) {
-			console.log(`Sending timing of ${playedSeconds}`);
+			// console.log(`Sending timing of ${playedSeconds}`);
 			socket.emit("SEND_TIMING", roomId, { timing: playedSeconds });
 		}
 		// Host: Update DB's timing every 10 seconds
@@ -86,12 +90,14 @@ function VideoPlayer({ socket, roomId, user, url }) {
 
 	// Broadcast PLAY event to all other users
 	const playCallback = () => {
+		console.log("PLAYS");
 		// Host: Broadcast PLAY event to all users
 		// Host: Update status in DB (?)
 	};
 
 	// Broadcast PAUSE event to all other users
 	const pauseCallback = () => {
+		console.log("PAUSE");
 		// Host: Broadcast PAUSE event to all users
 		// Host: Update status in DB(?)
 	};
@@ -103,13 +109,52 @@ function VideoPlayer({ socket, roomId, user, url }) {
 		// Save progress when PAUSE happens and compare progresses when PLAY happens
 	};
 
-	// Broadcast BUFFERING event to all other users
-	const bufferStartCallback = () => {
-		console.log("BUFFERING/LOADING STARTS");
+	const readyCallback = () => {
+		console.log("READY");
 	};
 
+	// Broadcast BUFFERING event to all other users
+	const hold = useCallback((sourceId) => {
+		console.log(`HOLD`);
+		setIsPlaying(false);
+		setBuffererId(sourceId);
+	}, []);
+	const bufferStartCallback = () => {
+		console.log(`BUFFER START`);
+		if (!ignoreNextBuffer) {
+			console.log("Is buffering, requesting all others to hold");
+			socket.emit("REQUEST_HOLD", roomId);
+			setBuffererId(socket.id);
+			setIgnoreNextBuffer(true);
+		} else {
+			setIgnoreNextBuffer(false);
+		}
+	};
+
+	const release = useCallback((newTiming) => {
+		console.log(`RELEASE`);
+
+		// if (isFirstBuffer) {
+		// setIsFirstBuffer(false);
+		// } else {
+		// 	setSyncTime(newTiming);
+		// }
+
+		setIsPlaying(true);
+		setIsDesync(true);
+	}, []);
 	const bufferEndCallback = () => {
-		console.log("BUFFERING/LOADING ENDS");
+		// if (!ignoreNextBuffer) {
+		console.log(`BUFFER END`);
+		if (socket.id === buffererId) {
+			console.log("Bufferer has stopped buffering, requesting all others to release");
+			socket.emit("REQUEST_RELEASE", roomId, playerRef.current.getCurrentTime());
+			setBuffererId(UNAVALIABLE);
+		}
+		// 	setIgnoreNextBuffer(true);
+		// } else {
+		// 	setIgnoreNextBuffer(false);
+		// }
 	};
 
 	// Broadcast SPEED_CHANGE event to all other users
@@ -129,23 +174,32 @@ function VideoPlayer({ socket, roomId, user, url }) {
 			socket.on("connect", initialize);
 			socket.on("RECEIVE_URL", receiveUrl);
 			socket.on("RECEIVE_TIMING", receiveTiming);
+			socket.on("HOLD", hold);
+			socket.on("RELEASE", release);
 			return () => {
 				socket.off("connect", initialize);
 				socket.off("RECEIVE_URL", receiveUrl);
 				socket.off("RECEIVE_TIMING", receiveTiming);
+				socket.off("HOLD", hold);
+				socket.off("RELEASE", release);
 			};
 		}
-	}, [socket, initialize, receiveUrl, receiveTiming]);
+	}, [socket, initialize, receiveUrl, receiveTiming, hold, release]);
 
 	// Sync to latest timing if the player ever goes desync
 	useEffect(() => {
-		if (user && user.isHost) {
-			setIsDesync(false);
-		} else if (socket && isDesync && syncTime !== UNAVALIABLE) {
+		if (socket && isDesync && syncTime !== UNAVALIABLE) {
 			console.log(`${socket.id} is behind, syncing to ${syncTime}`);
 			playerRef.current.seekTo(syncTime, "seconds");
 			setIsDesync(false);
 		}
+		// if (user && user.isHost) {
+		// 	setIsDesync(false);
+		// } else if (socket && isDesync && syncTime !== UNAVALIABLE) {
+		// 	console.log(`${socket.id} is behind, syncing to ${syncTime}`);
+		// 	playerRef.current.seekTo(syncTime, "seconds");
+		// 	setIsDesync(false);
+		// }
 	}, [socket, isDesync, syncTime, user]);
 
 	return (
@@ -155,14 +209,14 @@ function VideoPlayer({ socket, roomId, user, url }) {
 			width="100%"
 			height="100%"
 			url={videoUrl}
-			playing={true}
+			playing={isPlaying}
 			controls
 			loop
 			muted
 			onPlay={playCallback}
 			onPause={pauseCallback}
 			onProgress={timingCallback}
-			onReady={bufferStartCallback}
+			onReady={readyCallback}
 			onBuffer={bufferStartCallback}
 			onBufferEnd={bufferEndCallback}
 		/>

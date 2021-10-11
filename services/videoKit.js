@@ -52,5 +52,25 @@ module.exports = (io) => {
 				console.log(`${socket.id} sent a timing of ${timing.timing} to room ${roomId}`);
 			}
 		});
+
+		// 4. Ask all other users to wait
+		socket.on("REQUEST_HOLD", (roomId) => {
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("HOLD", socket.id);
+				console.log(`${socket.id} ask all other users to hold`);
+			}
+		});
+
+		// 5. Ask all other users to go
+		socket.on("REQUEST_RELEASE", (roomId, newTiming) => {
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("RELEASE", newTiming);
+				console.log(`${socket.id} ask all other users to release at ${newTiming}`);
+			}
+		});
 	});
 };
