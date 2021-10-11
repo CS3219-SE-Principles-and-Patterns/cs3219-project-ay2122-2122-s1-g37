@@ -7,18 +7,36 @@ on:
     branches: [ main ]
 
 jobs:
-  cypress-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup node
-        uses: actions/setup-node@v2
-        with:
-          node-version: 14.x
-      - name: Update npm
-        run: npm install npm@latest -g
-      - name: Install dependencies
-        run: npm run install-all
-      - name: Cypress run tests
-        run: npm run cypress-test
+    cypress-test:
+    #need to run on different browser
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v2
+          - name: Setup node
+            uses: actions/setup-node@v2
+            with:
+              node-version: 14.x
+          - name: Update npm
+            run: npm install npm@latest -g
+          - name: Install dependencies
+            run: npm run install-all
+          - name: Cypress tests
+            run: npm run cypress-test
+            
+    jest-test:
+        runs-on: ubuntu-latest
+            steps:
+              - name: Checkout
+                uses: actions/checkout@v2
+              - name: Setup node
+                uses: actions/setup-node@v2
+                with:
+                  node-version: 14.x
+              - name: Install dependencies
+                run: npm run install
+              - name: Jest tests
+                run: npm run jest-test
+            
+
+  
