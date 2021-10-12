@@ -63,13 +63,24 @@ module.exports = (io) => {
 			}
 		});
 
-		// 5. Ask all other users to go
 		socket.on("REQUEST_RELEASE", (roomId, newTiming) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
 			} else {
-				socket.to(roomId).emit("RELEASE", newTiming);
-				console.log(`${socket.id} ask all other users to release at ${newTiming}`);
+				socket.to(roomId).emit("PREPARE_RELEASE", newTiming);
+			}
+		});
+
+		socket.on("REQUEST_RELEASE_READY", (buffererId) => {
+			socket.to(buffererId).emit("RELEASE_READY");
+		});
+
+		// 5. Ask all other users to go
+		socket.on("REQUEST_RELEASE_ALL", (roomId) => {
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("RELEASE");
 			}
 		});
 	});

@@ -98,7 +98,13 @@ function Room() {
 		<RoomPageWrapper>
 			<div className="room-player">
 				<div className="room-res-wrapper">
-					<VideoPlayer {...playerState} user={user} socket={videoSocket} roomId={id} />
+					<VideoPlayer
+						{...playerState}
+						users={users}
+						user={user}
+						socket={videoSocket}
+						roomId={id}
+					/>
 				</div>
 			</div>
 			<div className="room-sidebar">
