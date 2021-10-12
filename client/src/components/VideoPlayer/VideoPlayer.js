@@ -8,18 +8,18 @@ const placeholderRoomInfo = {
 	url: "",
 	elapsedTime: 0,
 };
-const fallbackURL = "https://www.youtube.com/watch?v=q5WbrPwidrY";
+const fallbackURL = "https://www.youtube.com/watch?v=Ski_KEgOUP4";
 const timeout = (ms) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 const UNAVALIABLE = -1;
+const SYNC_THRESHOLD = 1;
 
 function VideoPlayer({ socket, roomId, user, url }) {
 	const [videoUrl, setVideoUrl] = useState("");
 	const [isPlaying, setIsPlaying] = useState(true);
 
-	const [isDesync, setIsDesync] = useState(false);
 	const [syncTime, setSyncTime] = useState(UNAVALIABLE);
 	const [buffererId, setBuffererId] = useState(UNAVALIABLE);
 	const [ignoreNextBuffer, setIgnoreNextBuffer] = useState(false);
@@ -46,8 +46,8 @@ function VideoPlayer({ socket, roomId, user, url }) {
 				);
 			}
 
-			setIsDesync(true);
-			console.log("Initial sync up");
+			// setIsDesync(true);
+			// console.log("Initial sync up");
 		});
 	}, [socket, roomId]);
 
@@ -82,9 +82,10 @@ function VideoPlayer({ socket, roomId, user, url }) {
 	);
 	const timingCallback = ({ playedSeconds }) => {
 		// Host: Broadcast timing every second
-		if (user.isHost) {
+		if (user.isHost && isPlaying && buffererId === UNAVALIABLE) {
 			// console.log(`Sending timing of ${playedSeconds}`);
 			socket.emit("SEND_TIMING", roomId, { timing: playedSeconds });
+			setSyncTime(playedSeconds);
 		}
 		// Host: Update DB's timing every 10 seconds
 	};
@@ -92,6 +93,7 @@ function VideoPlayer({ socket, roomId, user, url }) {
 	// Broadcast PLAY event to all other users
 	const playCallback = () => {
 		console.log("PLAYS");
+		setIsPlaying(true);
 		// Host: Broadcast PLAY event to all users
 		// Host: Update status in DB (?)
 	};
@@ -99,6 +101,7 @@ function VideoPlayer({ socket, roomId, user, url }) {
 	// Broadcast PAUSE event to all other users
 	const pauseCallback = () => {
 		console.log("PAUSE");
+		setIsPlaying(false);
 		// Host: Broadcast PAUSE event to all users
 		// Host: Update status in DB(?)
 	};
@@ -112,40 +115,44 @@ function VideoPlayer({ socket, roomId, user, url }) {
 
 	const readyCallback = () => {
 		console.log("READY");
+		bufferStartCallback();
 	};
 
 	// Broadcast BUFFERING event to all other users
 	const hold = useCallback((sourceId) => {
 		console.log(`HOLD`);
-
 		setIsPlaying(false);
 		setBuffererId(sourceId);
 	}, []);
 	const bufferStartCallback = () => {
-		// console.log(`BUFFER START`);
-
+		console.log(`BUFFER START`);
 		if (ignoreNextBuffer) {
-			// console.log("IGNORED");
+			console.log("IGNORED");
 			setIgnoreNextBuffer(false);
 		} else if (buffererId === UNAVALIABLE) {
 			console.log("REQUESTING FOR HOLD");
-			socket.emit("REQUEST_HOLD", roomId, socket.id);
 			setBuffererId(socket.id);
+			socket.emit("REQUEST_HOLD", roomId, socket.id);
 		}
 	};
 
 	const release = useCallback((newTiming) => {
 		console.log(`RELEASE`);
 		setIgnoreNextBuffer(true);
+		setSyncTime(newTiming);
 		playerRef.current.seekTo(newTiming, "seconds");
 		setIsPlaying(true);
 		setBuffererId(UNAVALIABLE);
 	}, []);
 	const bufferEndCallback = () => {
+		console.log(`BUFFER END`);
 		if (buffererId === socket.id) {
-			console.log("REQUESTING FOR RELEASE");
+			console.log(`REQUESTING FOR RELEASE AT ${playerRef.current.getCurrentTime()}`);
+			setSyncTime(playerRef.current.getCurrentTime());
 			socket.emit("REQUEST_RELEASE", roomId, playerRef.current.getCurrentTime());
 			setBuffererId(UNAVALIABLE);
+		} else {
+			console.log("IGNORED");
 		}
 	};
 
@@ -180,12 +187,27 @@ function VideoPlayer({ socket, roomId, user, url }) {
 
 	// Sync to latest timing if the player ever goes desync
 	useEffect(() => {
-		if (socket && isDesync && syncTime !== UNAVALIABLE) {
+		// if (socket && isDesync && syncTime !== UNAVALIABLE) {
+		// console.log(`${socket.id} is behind, syncing to ${syncTime}`);
+		// playerRef.current.seekTo(syncTime, "seconds");
+		// setIsDesync(false);
+		// }
+
+		// IS PLAYING IS ACTIVE EVEN THO PLAYER PAUSED
+		if (
+			isPlaying &&
+			buffererId === UNAVALIABLE &&
+			Math.abs(playerRef.current.getCurrentTime() - syncTime) > SYNC_THRESHOLD
+		) {
+			console.log(
+				`isPlaying: ${isPlaying} / buffererId: ${buffererId} / timing diff: ${Math.abs(
+					playerRef.current.getCurrentTime() - syncTime
+				)}`
+			);
 			console.log(`${socket.id} is behind, syncing to ${syncTime}`);
 			playerRef.current.seekTo(syncTime, "seconds");
-			setIsDesync(false);
 		}
-	}, [socket, isDesync, syncTime, user]);
+	}, [socket, syncTime, isPlaying, buffererId]);
 
 	return (
 		<ReactPlayer
