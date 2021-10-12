@@ -1,3 +1,4 @@
+import { duration } from "@mui/material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player/youtube";
 
@@ -16,6 +17,54 @@ const timeout = (ms) => {
 const UNAVALIABLE = -1;
 const SYNC_THRESHOLD = 1;
 
+const debounce = (func, duration) => {
+	let timeout;
+
+	return (...args) => {
+		console.log(`Debounced with ${args[0]}`);
+
+		const later = () => {
+			clearTimeout(timeout);
+			func(...args);
+			console.log(`set to ${args[0]}`);
+		};
+
+		clearTimeout(timeout);
+		timeout = setTimeout(later, duration);
+	};
+};
+
+const throttleSetState = (setState, delay) => {
+	let throttleTimeout = null;
+	let storedState = null;
+
+	const throttledSetState = (state) => {
+		storedState = state;
+
+		const shouldSetState = !throttleTimeout;
+		console.log("Setting throttled isPlaying...");
+
+		if (shouldSetState) {
+			setState(state);
+			console.log(state);
+
+			storedState = null;
+
+			throttleTimeout = setTimeout(() => {
+				throttleTimeout = null;
+
+				if (storedState) {
+					throttleSetState(storedState);
+				}
+			}, delay);
+		} else {
+			console.log(`TIMEOUT yet to happen, ${storedState}`);
+		}
+	};
+
+	return throttledSetState;
+};
+
 function VideoPlayer({ socket, roomId, users, user, url }) {
 	const [videoUrl, setVideoUrl] = useState("");
 	const [isPlaying, setIsPlaying] = useState(true);
@@ -25,6 +74,10 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const [ignoreNextBuffer, setIgnoreNextBuffer] = useState(false);
 	const [isInitialSync, setIsInitialSync] = useState(true);
 	const [readyCount, setReadyCount] = useState(UNAVALIABLE);
+	const [isReleased, setIsReleased] = useState(false);
+
+	const [throttledSetPlaying] = useState(() => throttleSetState(setIsPlaying, 0));
+	const [debouncedSetPlaying] = useState(() => debounce(setIsPlaying, 500));
 
 	const playerRef = useRef(null);
 
@@ -95,15 +148,15 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	// Broadcast PLAY event to all other users
 	const playCallback = () => {
 		console.log("PLAYS");
-		setIsPlaying(true);
+		// setIsPlaying(true);
 		// Host: Broadcast PLAY event to all users
 		// Host: Update status in DB (?)
 	};
 
 	// Broadcast PAUSE event to all other users
 	const pauseCallback = () => {
-		console.log("PAUSE");
-		setIsPlaying(false);
+		console.log(`PAUSE, isPlaying: ${isPlaying} isReleased: ${isReleased}`);
+		// setIsPlaying(false);
 		// Host: Broadcast PAUSE event to all users
 		// Host: Update status in DB(?)
 	};
@@ -121,11 +174,15 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	};
 
 	// Broadcast BUFFERING event to all other users
-	const hold = useCallback((sourceId) => {
-		console.log(`HOLD`);
-		setIsPlaying(false);
-		setBuffererId(sourceId);
-	}, []);
+	const hold = useCallback(
+		(sourceId) => {
+			console.log(`HOLD`);
+			// throttledSetPlaying(false);
+			setIsPlaying(false);
+			setBuffererId(sourceId);
+		},
+		[throttledSetPlaying]
+	);
 	const bufferStartCallback = () => {
 		console.log(`BUFFER START`);
 		if (ignoreNextBuffer) {
@@ -148,18 +205,26 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	// 	setIsPlaying(true);
 	// 	setBuffererId(UNAVALIABLE);
 	// }, []);
-	const prepareRelease = useCallback((newTiming) => {
-		console.log("PREPARE FOR RELEASE");
-		setSyncTime(newTiming);
-		playerRef.current.seekTo(newTiming);
-		setIsPlaying(true);
-	}, []);
+	const prepareRelease = useCallback(
+		(newTiming) => {
+			console.log("PREPARE FOR RELEASE");
+			setSyncTime(newTiming);
+			playerRef.current.seekTo(newTiming);
+			debouncedSetPlaying(true);
+			// throttledSetPlaying(true);
+			// setIsPlaying(true);
+		},
+		[debouncedSetPlaying]
+	);
 	const release = useCallback(() => {
 		console.log(`RELEASE`);
 		setIgnoreNextBuffer(true);
-		setIsPlaying(true);
+		debouncedSetPlaying(true);
+		// throttledSetPlaying(true);
+		// setIsPlaying(true);
+		// setIsReleased(true);
 		setBuffererId(UNAVALIABLE);
-	}, []);
+	}, [debouncedSetPlaying]);
 	const receiveReady = useCallback(() => {
 		if (!socket) {
 			return;
@@ -167,6 +232,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		const newCount = readyCount - 1;
 		if (newCount === 0) {
 			console.log("RECEIVED ALL READYS, RELEASING ALL...");
+			// throttledSetPlaying(true);
 			setIsPlaying(true);
 			socket.emit("REQUEST_RELEASE_ALL", roomId);
 			setBuffererId(UNAVALIABLE);
@@ -175,7 +241,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			console.log(`Count: ${newCount}`);
 			setReadyCount(newCount);
 		}
-	}, [readyCount, roomId, socket]);
+	}, [readyCount, roomId, socket, throttledSetPlaying]);
 	const bufferEndCallback = () => {
 		console.log(`BUFFER END`);
 		if (buffererId === socket.id) {
@@ -202,13 +268,21 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			}
 		} else if (buffererId !== UNAVALIABLE && buffererId !== socket.id) {
 			console.log("READY TO RELEASE");
-			setIsPlaying(false);
+			debouncedSetPlaying(false);
+			// setIsPlaying(false);
 			socket.emit("REQUEST_RELEASE_READY", buffererId);
 			setBuffererId(UNAVALIABLE);
 		} else {
 			console.log("IGNORED");
 		}
 	};
+	// useEffect(() => {
+	// 	if (!isPlaying && isReleased) {
+	// 		setIsPlaying(true);
+	// 		setIsReleased(false);
+	// 		console.log("Re-adjust isPlaying");
+	// 	}
+	// }, [isPlaying, isReleased]);
 
 	// Broadcast SPEED_CHANGE event to all other users
 	const speedChangeCallback = () => {
