@@ -23,6 +23,7 @@ function VideoPlayer({ socket, roomId, user, url }) {
 	const [syncTime, setSyncTime] = useState(UNAVALIABLE);
 	const [buffererId, setBuffererId] = useState(UNAVALIABLE);
 	const [ignoreNextBuffer, setIgnoreNextBuffer] = useState(false);
+	const [isInitialSync, setIsInitialSync] = useState(true);
 
 	const playerRef = useRef(null);
 
@@ -139,17 +140,27 @@ function VideoPlayer({ socket, roomId, user, url }) {
 	const release = useCallback((newTiming) => {
 		console.log(`RELEASE`);
 		setIgnoreNextBuffer(true);
-		setSyncTime(newTiming);
-		playerRef.current.seekTo(newTiming, "seconds");
+		if (newTiming) {
+			setSyncTime(newTiming);
+			playerRef.current.seekTo(newTiming, "seconds");
+		}
 		setIsPlaying(true);
 		setBuffererId(UNAVALIABLE);
 	}, []);
 	const bufferEndCallback = () => {
 		console.log(`BUFFER END`);
 		if (buffererId === socket.id) {
-			console.log(`REQUESTING FOR RELEASE AT ${playerRef.current.getCurrentTime()}`);
-			setSyncTime(playerRef.current.getCurrentTime());
-			socket.emit("REQUEST_RELEASE", roomId, playerRef.current.getCurrentTime());
+			if (isInitialSync) {
+				console.log(`REQUESTING FOR RELEASE WITHOUT SYNC`);
+				socket.emit("REQUEST_RELEASE", roomId);
+				setIsInitialSync(false);
+			} else {
+				console.log(
+					`REQUESTING FOR RELEASE, SYNC AT ${playerRef.current.getCurrentTime()}`
+				);
+				setSyncTime(playerRef.current.getCurrentTime());
+				socket.emit("REQUEST_RELEASE", roomId, playerRef.current.getCurrentTime());
+			}
 			setBuffererId(UNAVALIABLE);
 		} else {
 			console.log("IGNORED");
