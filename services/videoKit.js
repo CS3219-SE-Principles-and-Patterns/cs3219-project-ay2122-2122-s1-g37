@@ -83,5 +83,21 @@ module.exports = (io) => {
 				socket.to(roomId).emit("RELEASE");
 			}
 		});
+
+		socket.on("PLAY_ALL", (roomId) => {
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("PLAY");
+			}
+		});
+
+		socket.on("PAUSE_ALL", (roomId) => {
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("PAUSE");
+			}
+		});
 	});
 };

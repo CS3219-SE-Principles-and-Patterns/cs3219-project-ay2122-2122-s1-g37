@@ -139,23 +139,37 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	};
 
 	// Broadcast PLAY event to all other users
+	const play = useCallback(() => {
+		setIsPlaying(true);
+	}, []);
 	const playCallback = () => {
 		console.log("PLAYS");
 		if (!isPlaying) {
+			console.log("PLAY ALL");
+			// Host: Broadcast PLAY event to all users
+			socket.emit("PLAY_ALL", roomId);
+
+			// Host: Update status in DB (?)
+
 			setIsPlaying(true);
 		}
-		// Host: Broadcast PLAY event to all users
-		// Host: Update status in DB (?)
 	};
 
 	// Broadcast PAUSE event to all other users
+	const pause = useCallback(() => {
+		setIsPlaying(false);
+	}, []);
 	const pauseCallback = () => {
 		console.log(`PAUSE, isPlaying: ${isPlaying}`);
 		if (isPlaying) {
+			console.log("PAUSE ALL");
+			// Host: Broadcast PAUSE event to all users
+			socket.emit("PAUSE_ALL", roomId);
+
+			// Host: Update status in DB(?)
+
 			setIsPlaying(false);
 		}
-		// Host: Broadcast PAUSE event to all users
-		// Host: Update status in DB(?)
 	};
 
 	const readyCallback = () => {
@@ -261,6 +275,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			socket.on("PREPARE_RELEASE", prepareRelease);
 			socket.on("RELEASE_READY", receiveReady);
 			socket.on("RELEASE", release);
+			socket.on("PLAY", play);
+			socket.on("PAUSE", pause);
 			return () => {
 				socket.off("connect", initialize);
 				socket.off("RECEIVE_URL", receiveUrl);
@@ -269,6 +285,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 				socket.off("PREPARE_RELEASE", prepareRelease);
 				socket.off("RELEASE_READY", receiveReady);
 				socket.off("RELEASE", release);
+				socket.off("PLAY", play);
+				socket.off("PAUSE", pause);
 			};
 		}
 	}, [
@@ -280,6 +298,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		release,
 		prepareRelease,
 		receiveReady,
+		play,
+		pause,
 	]);
 
 	// Sync to latest timing if the player ever goes desync
