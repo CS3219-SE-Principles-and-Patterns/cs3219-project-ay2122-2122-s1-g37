@@ -70,7 +70,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 
 	const [syncTime, setSyncTime] = useState(UNAVALIABLE);
 	const [buffererId, setBuffererId] = useState(UNAVALIABLE);
-	const [ignoreNextBuffer, setIgnoreNextBuffer] = useState(false);
 	const [isInitialSync, setIsInitialSync] = useState(true);
 	const [readyCount, setReadyCount] = useState(UNAVALIABLE);
 
@@ -103,6 +102,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	// Receiving and broadcasting URLs
 	const receiveUrl = useCallback(
 		(url) => {
+			setIsInitialSync(true);
 			setVideoUrl(url);
 		},
 		[setVideoUrl]
@@ -110,6 +110,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	useEffect(() => {
 		if (socket && url) {
 			// Self: Update state
+			setIsInitialSync(true);
 			setVideoUrl(url);
 			// Self: Broadcast new URL to all
 			if (url !== fallbackURL) {
@@ -123,7 +124,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const receiveTiming = useCallback(
 		({ timing }) => {
 			if (!user.isHost) {
-				// console.log(`Receive timing of ${timing}`);
 				setSyncTime(timing);
 			}
 		},
@@ -132,7 +132,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const timingCallback = ({ playedSeconds }) => {
 		// Host: Broadcast timing every second
 		if (user.isHost && isPlaying && buffererId === UNAVALIABLE) {
-			// console.log(`Sending timing of ${playedSeconds}`);
 			socket.emit("SEND_TIMING", roomId, { timing: playedSeconds });
 			setSyncTime(playedSeconds);
 		}
@@ -172,14 +171,13 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	}, []);
 	const bufferStartCallback = () => {
 		console.log(`BUFFER START`);
-		if (ignoreNextBuffer) {
-			console.log("IGNORED");
-			setIgnoreNextBuffer(false);
-		} else if (buffererId === UNAVALIABLE) {
+		if (buffererId === UNAVALIABLE) {
 			console.log("REQUESTING FOR HOLD");
 			setBuffererId(socket.id);
 			socket.emit("REQUEST_HOLD", roomId, socket.id);
 			setIsPlaying(true);
+		} else {
+			console.log("IGNORED");
 		}
 	};
 
@@ -194,7 +192,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	);
 	const release = useCallback(() => {
 		console.log(`RELEASE`);
-		setIgnoreNextBuffer(true);
 		debouncedSetPlaying(true);
 		setBuffererId(UNAVALIABLE);
 	}, [debouncedSetPlaying]);
