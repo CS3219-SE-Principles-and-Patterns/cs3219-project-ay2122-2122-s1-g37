@@ -73,9 +73,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const [ignoreNextBuffer, setIgnoreNextBuffer] = useState(false);
 	const [isInitialSync, setIsInitialSync] = useState(true);
 	const [readyCount, setReadyCount] = useState(UNAVALIABLE);
-	const [isReleased, setIsReleased] = useState(false);
 
-	const [throttledSetPlaying] = useState(() => throttleSetState(setIsPlaying, 0));
 	const [debouncedSetPlaying] = useState(() => debounce(setIsPlaying, 250));
 
 	const playerRef = useRef(null);
@@ -99,9 +97,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 					`${socket.id} cannot found URL for the room ${roomId}, using fallback...`
 				);
 			}
-
-			// setIsDesync(true);
-			// console.log("Initial sync up");
 		});
 	}, [socket, roomId]);
 
@@ -156,20 +151,12 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 
 	// Broadcast PAUSE event to all other users
 	const pauseCallback = () => {
-		console.log(`PAUSE, isPlaying: ${isPlaying} isReleased: ${isReleased}`);
+		console.log(`PAUSE, isPlaying: ${isPlaying}`);
 		if (isPlaying) {
 			setIsPlaying(false);
 		}
-
 		// Host: Broadcast PAUSE event to all users
 		// Host: Update status in DB(?)
-	};
-
-	// Broadcast SEEK event to all other users
-	const seekCallback = () => {
-		console.log("VIDEO SEEKS");
-		// To-do: Broadcast SEEK event to all other users. YouTube API does not provide SEEK directly
-		// Save progress when PAUSE happens and compare progresses when PLAY happens
 	};
 
 	const readyCallback = () => {
@@ -180,7 +167,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	// Broadcast BUFFERING event to all other users
 	const hold = useCallback((sourceId) => {
 		console.log(`HOLD`);
-		// throttledSetPlaying(false);
 		setIsPlaying(false);
 		setBuffererId(sourceId);
 	}, []);
@@ -197,24 +183,12 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		}
 	};
 
-	// const release = useCallback((newTiming) => {
-	// 	console.log(`RELEASE`);
-	// 	setIgnoreNextBuffer(true);
-	// 	if (newTiming) {
-	// 		setSyncTime(newTiming);
-	// 		playerRef.current.seekTo(newTiming, "seconds");
-	// 	}
-	// 	setIsPlaying(true);
-	// 	setBuffererId(UNAVALIABLE);
-	// }, []);
 	const prepareRelease = useCallback(
 		(newTiming) => {
 			console.log("PREPARE FOR RELEASE");
 			setSyncTime(newTiming);
 			playerRef.current.seekTo(newTiming);
 			debouncedSetPlaying(true);
-			// throttledSetPlaying(true);
-			// setIsPlaying(true);
 		},
 		[debouncedSetPlaying]
 	);
@@ -222,9 +196,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		console.log(`RELEASE`);
 		setIgnoreNextBuffer(true);
 		debouncedSetPlaying(true);
-		// throttledSetPlaying(true);
-		// setIsPlaying(true);
-		// setIsReleased(true);
 		setBuffererId(UNAVALIABLE);
 	}, [debouncedSetPlaying]);
 	const receiveReady = useCallback(() => {
@@ -235,8 +206,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		if (newCount === 0) {
 			console.log("RECEIVED ALL READYS, RELEASING ALL...");
 			debouncedSetPlaying(true);
-			// throttledSetPlaying(true);
-			// setIsPlaying(true);
 			socket.emit("REQUEST_RELEASE_ALL", roomId);
 			setBuffererId(UNAVALIABLE);
 			setReadyCount(UNAVALIABLE);
@@ -273,30 +242,16 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		} else if (buffererId !== UNAVALIABLE && buffererId !== socket.id) {
 			console.log("READY TO RELEASE");
 			debouncedSetPlaying(false);
-			// setIsPlaying(false);
 			socket.emit("REQUEST_RELEASE_READY", buffererId);
 			setBuffererId(UNAVALIABLE);
 		} else {
 			console.log("IGNORED");
 		}
 	};
-	// useEffect(() => {
-	// 	if (!isPlaying && isReleased) {
-	// 		setIsPlaying(true);
-	// 		setIsReleased(false);
-	// 		console.log("Re-adjust isPlaying");
-	// 	}
-	// }, [isPlaying, isReleased]);
 
 	// Broadcast SPEED_CHANGE event to all other users
 	const speedChangeCallback = () => {
 		console.log("PLAYBACK SPEED CHANGE");
-	};
-
-	// Catch up a new user using latest known state
-	const catchUp = () => {
-		// Retrieve latest video state from DB
-		// Update video player with it
 	};
 
 	// Reset socket event handlers when VideoPlayer re-renders
@@ -332,13 +287,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 
 	// Sync to latest timing if the player ever goes desync
 	useEffect(() => {
-		// if (socket && isDesync && syncTime !== UNAVALIABLE) {
-		// console.log(`${socket.id} is behind, syncing to ${syncTime}`);
-		// playerRef.current.seekTo(syncTime, "seconds");
-		// setIsDesync(false);
-		// }
-
-		// IS PLAYING IS ACTIVE EVEN THO PLAYER PAUSED
 		if (
 			isPlaying &&
 			buffererId === UNAVALIABLE &&
