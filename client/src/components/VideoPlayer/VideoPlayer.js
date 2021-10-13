@@ -1,4 +1,3 @@
-import { duration } from "@mui/material";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player/youtube";
 
@@ -77,7 +76,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const [isReleased, setIsReleased] = useState(false);
 
 	const [throttledSetPlaying] = useState(() => throttleSetState(setIsPlaying, 0));
-	const [debouncedSetPlaying] = useState(() => debounce(setIsPlaying, 500));
+	const [debouncedSetPlaying] = useState(() => debounce(setIsPlaying, 250));
 
 	const playerRef = useRef(null);
 
@@ -148,7 +147,9 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	// Broadcast PLAY event to all other users
 	const playCallback = () => {
 		console.log("PLAYS");
-		// setIsPlaying(true);
+		if (!isPlaying) {
+			setIsPlaying(true);
+		}
 		// Host: Broadcast PLAY event to all users
 		// Host: Update status in DB (?)
 	};
@@ -156,7 +157,10 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	// Broadcast PAUSE event to all other users
 	const pauseCallback = () => {
 		console.log(`PAUSE, isPlaying: ${isPlaying} isReleased: ${isReleased}`);
-		// setIsPlaying(false);
+		if (isPlaying) {
+			setIsPlaying(false);
+		}
+
 		// Host: Broadcast PAUSE event to all users
 		// Host: Update status in DB(?)
 	};
@@ -174,15 +178,12 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	};
 
 	// Broadcast BUFFERING event to all other users
-	const hold = useCallback(
-		(sourceId) => {
-			console.log(`HOLD`);
-			// throttledSetPlaying(false);
-			setIsPlaying(false);
-			setBuffererId(sourceId);
-		},
-		[throttledSetPlaying]
-	);
+	const hold = useCallback((sourceId) => {
+		console.log(`HOLD`);
+		// throttledSetPlaying(false);
+		setIsPlaying(false);
+		setBuffererId(sourceId);
+	}, []);
 	const bufferStartCallback = () => {
 		console.log(`BUFFER START`);
 		if (ignoreNextBuffer) {
@@ -192,6 +193,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			console.log("REQUESTING FOR HOLD");
 			setBuffererId(socket.id);
 			socket.emit("REQUEST_HOLD", roomId, socket.id);
+			setIsPlaying(true);
 		}
 	};
 
@@ -232,8 +234,9 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		const newCount = readyCount - 1;
 		if (newCount === 0) {
 			console.log("RECEIVED ALL READYS, RELEASING ALL...");
+			debouncedSetPlaying(true);
 			// throttledSetPlaying(true);
-			setIsPlaying(true);
+			// setIsPlaying(true);
 			socket.emit("REQUEST_RELEASE_ALL", roomId);
 			setBuffererId(UNAVALIABLE);
 			setReadyCount(UNAVALIABLE);
@@ -241,7 +244,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			console.log(`Count: ${newCount}`);
 			setReadyCount(newCount);
 		}
-	}, [readyCount, roomId, socket, throttledSetPlaying]);
+	}, [readyCount, roomId, socket, debouncedSetPlaying]);
 	const bufferEndCallback = () => {
 		console.log(`BUFFER END`);
 		if (buffererId === socket.id) {
@@ -263,6 +266,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 					);
 					setReadyCount(users.length - 1);
 					setSyncTime(playerRef.current.getCurrentTime());
+					debouncedSetPlaying(false);
 					socket.emit("REQUEST_RELEASE", roomId, playerRef.current.getCurrentTime());
 				}
 			}
