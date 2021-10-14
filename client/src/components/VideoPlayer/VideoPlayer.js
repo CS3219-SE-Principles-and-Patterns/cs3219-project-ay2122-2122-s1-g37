@@ -221,26 +221,12 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		[debouncedSetPlaying]
 	);
 	const release = useCallback(() => {
+		// if (socket.id !== buffererId) {
 		console.log(`RELEASE`);
 		debouncedSetPlaying(true);
 		setBuffererId(UNAVALIABLE);
+		// }
 	}, [debouncedSetPlaying]);
-	const receiveReady = useCallback(() => {
-		if (!socket) {
-			return;
-		}
-		const newCount = readyCount - 1;
-		if (newCount === 0) {
-			console.log("RECEIVED ALL READYS, RELEASING ALL...");
-			debouncedSetPlaying(true);
-			socket.emit("REQUEST_RELEASE_ALL", roomId);
-			setBuffererId(UNAVALIABLE);
-			setReadyCount(UNAVALIABLE);
-		} else {
-			console.log(`Count: ${newCount}`);
-			setReadyCount(newCount);
-		}
-	}, [readyCount, roomId, socket, debouncedSetPlaying]);
 	const bufferEndCallback = () => {
 		console.log(`BUFFER END`);
 		if (buffererId === socket.id) {
@@ -263,13 +249,18 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 					setReadyCount(users.length - 1);
 					setSyncTime(playerRef.current.getCurrentTime());
 					debouncedSetPlaying(false);
-					socket.emit("REQUEST_RELEASE", roomId, playerRef.current.getCurrentTime());
+					socket.emit(
+						"REQUEST_RELEASE",
+						roomId,
+						playerRef.current.getCurrentTime(),
+						users.length - 1
+					);
 				}
 			}
 		} else if (buffererId !== UNAVALIABLE && buffererId !== socket.id) {
 			console.log("READY TO RELEASE");
 			debouncedSetPlaying(false);
-			socket.emit("REQUEST_RELEASE_READY", buffererId);
+			socket.emit("REQUEST_RELEASE_READY", roomId, buffererId, release);
 			setBuffererId(UNAVALIABLE);
 		} else {
 			console.log("IGNORED");
@@ -284,7 +275,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			socket.on("RECEIVE_TIMING", receiveTiming);
 			socket.on("HOLD", hold);
 			socket.on("PREPARE_RELEASE", prepareRelease);
-			socket.on("RELEASE_READY", receiveReady);
+			// socket.on("RELEASE_READY", receiveReady);
 			socket.on("RELEASE", release);
 			socket.on("PLAY", play);
 			socket.on("PAUSE", pause);
@@ -295,7 +286,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 				socket.off("RECEIVE_TIMING", receiveTiming);
 				socket.off("HOLD", hold);
 				socket.off("PREPARE_RELEASE", prepareRelease);
-				socket.off("RELEASE_READY", receiveReady);
+				// socket.off("RELEASE_READY", receiveReady);
 				socket.off("RELEASE", release);
 				socket.off("PLAY", play);
 				socket.off("PAUSE", pause);
@@ -310,7 +301,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		hold,
 		release,
 		prepareRelease,
-		receiveReady,
+		playbackRateChange,
+		// receiveReady,
 		play,
 		pause,
 	]);

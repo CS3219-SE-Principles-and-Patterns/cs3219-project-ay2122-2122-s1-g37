@@ -3,6 +3,8 @@ const socketRoomMap = new Map();
 // Mapping a room to all the sockets in the room
 const roomSocketMap = new Map();
 
+const bufferReadysMap = new Map();
+
 module.exports = (io) => {
 	const videoIO = io.of("/video");
 
@@ -57,22 +59,52 @@ module.exports = (io) => {
 		socket.on("REQUEST_HOLD", (roomId) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
+			} else if (bufferReadysMap.has(socket.id)) {
+				console.log(
+					`${socket.id} is already waiting for release, ignoring this pause all request...`
+				);
 			} else {
 				socket.to(roomId).emit("HOLD", socket.id);
 				console.log(`${socket.id} ask all other users to hold`);
 			}
 		});
 
-		socket.on("REQUEST_RELEASE", (roomId, newTiming) => {
+		socket.on("REQUEST_RELEASE", (roomId, newTiming, numOfUsers) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
+			} else if (bufferReadysMap.has(socket.id)) {
+				console.log(
+					`${socket.id} is already waiting for release, ignoring this release request...`
+				);
 			} else {
+				console.log(`${socket.id} requests for ${numOfUsers} unique readys...`);
+
+				bufferReadysMap.set(socket.id, { readys: new Set(), target: numOfUsers });
 				socket.to(roomId).emit("PREPARE_RELEASE", newTiming);
 			}
 		});
 
-		socket.on("REQUEST_RELEASE_READY", (buffererId) => {
-			socket.to(buffererId).emit("RELEASE_READY");
+		socket.on("REQUEST_RELEASE_READY", (roomId, buffererId, releaseSelfCallback) => {
+			if (!bufferReadysMap.has(buffererId)) {
+				console.log(`Buffer entry for ${buffererId} not found, ignoring this ready...`);
+			} else {
+				const newEntry = bufferReadysMap.get(buffererId);
+				newEntry.readys.add(socket.id);
+
+				console.log(`${socket.id} sent a ready (Total: ${newEntry.readys.size})`);
+
+				if (newEntry.readys.size >= newEntry.target) {
+					console.log(
+						`${buffererId} receive ${newEntry.readys.size} total unique readys, will now release all`
+					);
+
+					bufferReadysMap.delete(buffererId);
+					socket.to(roomId).emit("RELEASE");
+					releaseSelfCallback();
+				} else {
+					bufferReadysMap.set(buffererId, newEntry);
+				}
+			}
 		});
 
 		// 5. Ask all other users to go
