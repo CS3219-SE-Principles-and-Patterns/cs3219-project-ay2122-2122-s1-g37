@@ -75,6 +75,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 
 	const [debouncedSetPlaying] = useState(() => debounce(setIsPlaying, 250));
 
+	const [playbackRate, setPlaybackRate] = useState(1);
+
 	const playerRef = useRef(null);
 
 	// Initialize upon connecting
@@ -172,8 +174,22 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		}
 	};
 
-	const readyCallback = () => {
+	// Broadcast PLAYBACK_RATE_CHANGE event to all other users
+	const playbackRateChange = useCallback((newRate) => {
+		setPlaybackRate(newRate);
+	}, []);
+	const rateChangeCallback = (rateObj) => {
+		console.log(`PLAYBACK SPEED CHANGE TO ${rateObj.data}`);
+		socket.emit("PLAYBACK_RATE_CHANGE_ALL", roomId, rateObj.data);
+	};
+
+	// Callback when the player completed initial loading and ready to go
+	const readyCallback = (player) => {
 		console.log("READY");
+
+		// Attach callback for change in playback rate
+		player.getInternalPlayer().addEventListener("onPlaybackRateChange", rateChangeCallback);
+
 		bufferStartCallback();
 	};
 
@@ -260,11 +276,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		}
 	};
 
-	// Broadcast SPEED_CHANGE event to all other users
-	const speedChangeCallback = () => {
-		console.log("PLAYBACK SPEED CHANGE");
-	};
-
 	// Reset socket event handlers when VideoPlayer re-renders
 	useEffect(() => {
 		if (socket) {
@@ -277,6 +288,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			socket.on("RELEASE", release);
 			socket.on("PLAY", play);
 			socket.on("PAUSE", pause);
+			socket.on("PLAYBACK_RATE_CHANGE", playbackRateChange);
 			return () => {
 				socket.off("connect", initialize);
 				socket.off("RECEIVE_URL", receiveUrl);
@@ -287,6 +299,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 				socket.off("RELEASE", release);
 				socket.off("PLAY", play);
 				socket.off("PAUSE", pause);
+				socket.off("PLAYBACK_RATE_CHANGE", playbackRateChange);
 			};
 		}
 	}, [
@@ -328,6 +341,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			height="100%"
 			url={videoUrl}
 			playing={isPlaying}
+			playbackRate={playbackRate}
 			controls
 			loop
 			muted

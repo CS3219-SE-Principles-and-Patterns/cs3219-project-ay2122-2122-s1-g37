@@ -99,5 +99,13 @@ module.exports = (io) => {
 				socket.to(roomId).emit("PAUSE");
 			}
 		});
+
+		socket.on("PLAYBACK_RATE_CHANGE_ALL", (roomId, newRate) => {
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("PLAYBACK_RATE_CHANGE", newRate);
+			}
+		});
 	});
 };
