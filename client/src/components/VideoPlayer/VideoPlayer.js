@@ -324,6 +324,11 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			controls
 			loop
 			muted
+			config={{
+				youtube: {
+					playerVars: { disablekb: 1, modestbranding: 1, rel: 0 },
+				},
+			}}
 			onPlay={playCallback}
 			onPause={pauseCallback}
 			onProgress={timingCallback}
