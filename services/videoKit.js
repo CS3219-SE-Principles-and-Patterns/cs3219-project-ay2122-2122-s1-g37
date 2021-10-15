@@ -2,9 +2,9 @@
 const socketRoomMap = new Map();
 // Mapping a room to all the sockets in the room
 const roomSocketMap = new Map();
-
+// Mapping a bufferer to a set of users that is ready to resume
 const bufferReadysMap = new Map();
-
+// Store rooms that are being held
 const roomHoldSet = new Set();
 
 module.exports = (io) => {
@@ -29,6 +29,7 @@ module.exports = (io) => {
 			callback();
 		});
 
+		// 2. Cleanup after a user disconnects
 		socket.on("disconnect", () => {
 			if (socketRoomMap.has(socket.id) && roomSocketMap.has(socketRoomMap.get(socket.id))) {
 				const roomId = socketRoomMap.get(socket.id);
@@ -37,7 +38,7 @@ module.exports = (io) => {
 			}
 		});
 
-		// 2. Broadcast URL to all
+		// 3. Broadcast URL to all other users
 		socket.on("SEND_URL", (roomId, url) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
@@ -47,7 +48,7 @@ module.exports = (io) => {
 			}
 		});
 
-		// 3. Broadcast timing to all users
+		// 3. Broadcast timing to all other users
 		socket.on("SEND_TIMING", (roomId, timing) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
@@ -62,14 +63,15 @@ module.exports = (io) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
 			} else if (roomHoldSet.has(roomId)) {
-				console.log(`Room ${roomId} is still holding, ignoring this hold all request...`);
+				console.log(`Room ${roomId} is still being held, ignoring this HOLD request...`);
 			} else {
 				roomHoldSet.add(roomId);
 				socket.to(roomId).emit("HOLD", socket.id);
-				console.log(`${socket.id} ask all other users to hold`);
+				console.log(`${socket.id} ask all other users to HOLD`);
 			}
 		});
 
+		// 5. Ask all other users to prepare to resume at a given timing
 		socket.on("REQUEST_RELEASE", (roomId, newTiming, numOfUsers) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
@@ -87,6 +89,7 @@ module.exports = (io) => {
 			}
 		});
 
+		// 6. Tell the server that this user is ready to resume
 		socket.on(
 			"REQUEST_RELEASE_READY",
 			(roomId, buffererId, numOfUsers, releaseSelfCallback) => {
@@ -140,7 +143,7 @@ module.exports = (io) => {
 			}
 		);
 
-		// 5. Ask all other users to go
+		// 7. Ask all other users to resume from holding
 		socket.on("REQUEST_RELEASE_ALL", (roomId) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
@@ -152,6 +155,7 @@ module.exports = (io) => {
 			}
 		});
 
+		// 8. Ask all other users to resume playing
 		socket.on("PLAY_ALL", (roomId) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
@@ -160,6 +164,7 @@ module.exports = (io) => {
 			}
 		});
 
+		// 9. Ask all other users to pause
 		socket.on("PAUSE_ALL", (roomId) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
@@ -168,6 +173,7 @@ module.exports = (io) => {
 			}
 		});
 
+		// 10. Ask all other users to change playback rate to a given value
 		socket.on("PLAYBACK_RATE_CHANGE_ALL", (roomId, newRate) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
