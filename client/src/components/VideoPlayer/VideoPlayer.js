@@ -260,7 +260,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		} else if (buffererId !== UNAVALIABLE && buffererId !== socket.id) {
 			console.log("READY TO RELEASE");
 			debouncedSetPlaying(false);
-			socket.emit("REQUEST_RELEASE_READY", roomId, buffererId, release);
+			socket.emit("REQUEST_RELEASE_READY", roomId, buffererId, users.length - 1, release);
 			setBuffererId(UNAVALIABLE);
 		} else {
 			console.log("IGNORED");
