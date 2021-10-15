@@ -80,7 +80,9 @@ module.exports = (io) => {
 					`${socket.id} is already waiting for release, ignoring this release request...`
 				);
 			} else {
-				console.log(`${socket.id} requests for ${numOfUsers} unique readys...`);
+				console.log(
+					`${socket.id} requests for ${numOfUsers} unique readys at ${newTiming}`
+				);
 
 				if (!bufferReadysMap.has(socket.id)) {
 					bufferReadysMap.set(socket.id, { readys: new Set(), target: numOfUsers });

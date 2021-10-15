@@ -62,7 +62,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const [videoUrl, setVideoUrl] = useState("");
 	const [isPlaying, setIsPlaying] = useState(true);
 
-	const [syncTime, setSyncTime] = useState(UNAVALIABLE);
 	const [buffererId, setBuffererId] = useState(UNAVALIABLE);
 	const [isInitialSync, setIsInitialSync] = useState(true);
 	const [playbackRate, setPlaybackRate] = useState(1);
@@ -70,6 +69,28 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const [debouncedSetPlaying] = useState(() => debounce(setIsPlaying, DELAY_DEBOUNCED_PLAYING));
 
 	const playerRef = useRef(null);
+
+	const syncTo = useCallback(
+		(timing) => {
+			// console.log(`isPlaying: ${isPlaying} / buffererId: ${buffererId} / timing: ${timing}`);
+			if (
+				socket &&
+				isPlaying &&
+				buffererId === UNAVALIABLE &&
+				timing !== UNAVALIABLE &&
+				Math.abs(playerRef.current.getCurrentTime() - timing) > THRESHOLD_SYNC
+			) {
+				console.log(
+					`isPlaying: ${isPlaying} / buffererId: ${buffererId} / curr: ${playerRef.current.getCurrentTime()} / syncAt: ${timing} / timing diff: ${Math.abs(
+						playerRef.current.getCurrentTime() - timing
+					)}`
+				);
+				console.log(`${socket.id} is behind, syncing to ${timing}`);
+				playerRef.current.seekTo(timing, "seconds");
+			}
+		},
+		[isPlaying, buffererId, socket]
+	);
 
 	// Initialize player with an URL
 	const initialize = useCallback(async () => {
@@ -115,21 +136,28 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			// Self: To-do - Update DB's URL
 		}
 	}, [socket, roomId, url]);
+	// useEffect(() => {
+	// 	if (isInitialSync) {
+	// 		syncTo(0);
+	// 	}
+	// }, [videoUrl, syncTo, isInitialSync]);
 
 	// Receiving and broadcasting synchronized timing
 	const receiveTiming = useCallback(
 		({ timing }) => {
 			if (!user.isHost) {
-				setSyncTime(timing);
+				// console.log(`Receive timing of ${timing}`);
+				syncTo(timing);
 			}
 		},
-		[user.isHost]
+		[user.isHost, syncTo]
 	);
 	const timingCallback = ({ playedSeconds }) => {
 		// Host: Broadcast timing every second
 		if (user.isHost && isPlaying && buffererId === UNAVALIABLE) {
+			// console.log(`Sent timing of ${playedSeconds}`);
 			socket.emit("SEND_TIMING", roomId, { timing: playedSeconds });
-			setSyncTime(playedSeconds);
+			syncTo(playedSeconds);
 		}
 	};
 
@@ -207,7 +235,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const prepareRelease = useCallback(
 		(newTiming) => {
 			console.log("PREPARE FOR RELEASE");
-			setSyncTime(newTiming);
+			// setSyncTime(newTiming);
 			playerRef.current.seekTo(newTiming);
 			debouncedSetPlaying(true);
 		},
@@ -230,14 +258,14 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 				if (users.length === 1) {
 					console.log(`RELEASE ALL WITHOUT SYNC`);
 					socket.emit("REQUEST_RELEASE_ALL", roomId);
-					setSyncTime(playerRef.current.getCurrentTime());
+					// setSyncTime(playerRef.current.getCurrentTime());
 					setIsInitialSync(false);
 					setBuffererId(UNAVALIABLE);
 				} else {
 					console.log(
 						`REQUESTING FOR RELEASE ALL WITH SYNC AT ${playerRef.current.getCurrentTime()}`
 					);
-					setSyncTime(playerRef.current.getCurrentTime());
+					// setSyncTime(playerRef.current.getCurrentTime());
 					debouncedSetPlaying(false);
 					socket.emit(
 						"REQUEST_RELEASE",
@@ -294,24 +322,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		pause,
 	]);
 
-	// Sync to latest timing if the player ever goes desync
-	useEffect(() => {
-		if (
-			isPlaying &&
-			buffererId === UNAVALIABLE &&
-			syncTime !== UNAVALIABLE &&
-			Math.abs(playerRef.current.getCurrentTime() - syncTime) > THRESHOLD_SYNC
-		) {
-			console.log(
-				`isPlaying: ${isPlaying} / buffererId: ${buffererId} / timing diff: ${Math.abs(
-					playerRef.current.getCurrentTime() - syncTime
-				)}`
-			);
-			console.log(`${socket.id} is behind, syncing to ${syncTime}`);
-			playerRef.current.seekTo(syncTime, "seconds");
-		}
-	}, [socket, syncTime, isPlaying, buffererId]);
-
 	return (
 		<ReactPlayer
 			className="react-player"
@@ -326,7 +336,12 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			muted
 			config={{
 				youtube: {
-					playerVars: { disablekb: 1, modestbranding: 1, rel: 0 },
+					playerVars: {
+						disablekb: buffererId === UNAVALIABLE ? 0 : 1,
+						modestbranding: 1,
+						rel: 0,
+						start: 1,
+					},
 				},
 			}}
 			onPlay={playCallback}
@@ -335,6 +350,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			onReady={readyCallback}
 			onBuffer={bufferStartCallback}
 			onBufferEnd={bufferEndCallback}
+			style={{ pointerEvents: buffererId === UNAVALIABLE ? "auto" : "none" }}
 		/>
 	);
 }
