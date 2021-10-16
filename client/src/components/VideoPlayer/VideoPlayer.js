@@ -68,6 +68,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 
 	const [debouncedSetPlaying] = useState(() => debounce(setIsPlaying, DELAY_DEBOUNCED_PLAYING));
 
+	const [isWaiting, setIsWaiting] = useState(true);
+
 	const playerRef = useRef(null);
 
 	// Synchronize to the given timing
@@ -81,6 +83,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			// );
 			if (
 				socket &&
+				!isWaiting &&
 				isPlaying &&
 				playerRef.current &&
 				buffererId === UNAVALIABLE &&
@@ -96,7 +99,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 				playerRef.current.seekTo(timing, "seconds");
 			}
 		},
-		[isPlaying, buffererId, socket]
+		[isPlaying, buffererId, socket, isWaiting]
 	);
 
 	// Initialize player with an URL
@@ -118,6 +121,26 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			}
 		});
 	}, [socket, roomId]);
+	const attemptsJoin = useCallback(() => {
+		// Ping server to ask if room is avaliable
+		console.log(`${socket.id} attempts to join room ${roomId}...`);
+		socket.emit("REQUEST_ROOM_STATUS", roomId);
+	}, [socket, roomId]);
+	// Handler for a rely from server, if room is avaliable (ie. not holdering), set isRoomBusy to false
+	const receiveRoomStatus = useCallback(
+		(isBusy) => {
+			if (isBusy) {
+				console.log(`room ${roomId} is busy, trying again later...`);
+				setTimeout(attemptsJoin, 1000);
+			} else {
+				setIsWaiting(false);
+
+				// Join room
+				initialize();
+			}
+		},
+		[attemptsJoin, initialize, roomId]
+	);
 
 	// Synchronize URL when a new URL is entered
 	const receiveUrl = useCallback(
@@ -309,15 +332,16 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 					socket.emit(
 						"REQUEST_RELEASE",
 						roomId,
-						playerRef.current.getCurrentTime(),
-						users.length - 1
+						playerRef.current.getCurrentTime()
+						//users.length - 1
 					);
 				}
 			}
 		} else if (buffererId !== UNAVALIABLE && buffererId !== socket.id) {
 			console.log("READY TO RELEASE");
 			debouncedSetPlaying(false);
-			socket.emit("REQUEST_RELEASE_READY", roomId, buffererId, users.length - 1, release);
+			socket.emit("REQUEST_RELEASE_READY", roomId, buffererId, release);
+			// socket.emit("REQUEST_RELEASE_READY", roomId, buffererId, users.length - 1, release);
 			setBuffererId(UNAVALIABLE);
 		} else {
 			console.log("IGNORED");
@@ -327,7 +351,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	// Apply event handlers when the player re-renders
 	useEffect(() => {
 		if (socket) {
-			socket.on("connect", initialize);
+			socket.on("connect", attemptsJoin);
+			socket.on("RECEIVE_ROOM_STATUS", receiveRoomStatus);
 			socket.on("RECEIVE_URL", receiveUrl);
 			socket.on("RECEIVE_TIMING", receiveTiming);
 			socket.on("HOLD", hold);
@@ -339,7 +364,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			socket.on("QUERY_SETTINGS", querySettings);
 			socket.on("RECEIVE_SETTINGS", receiveSettings);
 			return () => {
-				socket.off("connect", initialize);
+				socket.off("connect", attemptsJoin);
+				socket.off("RECEIVE_ROOM_STATUS", receiveRoomStatus);
 				socket.off("RECEIVE_URL", receiveUrl);
 				socket.off("RECEIVE_TIMING", receiveTiming);
 				socket.off("HOLD", hold);
@@ -365,6 +391,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		pause,
 		receiveSettings,
 		querySettings,
+		attemptsJoin,
+		receiveRoomStatus,
 	]);
 
 	return (

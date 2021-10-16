@@ -13,6 +13,10 @@ module.exports = (io) => {
 	videoIO.on("connection", (socket) => {
 		console.log(`${socket.id} connected to videoIO`);
 
+		socket.on("REQUEST_ROOM_STATUS", (roomId) => {
+			videoIO.to(socket.id).emit("RECEIVE_ROOM_STATUS", roomHoldSet.has(roomId));
+		});
+
 		// 1. Join room via id
 		socket.on("join-room", (roomId, callback) => {
 			console.log(`${socket.id} has joined the video room ${roomId}`);
@@ -74,7 +78,7 @@ module.exports = (io) => {
 		});
 
 		// 5. Ask all other users to prepare to resume at a given timing
-		socket.on("REQUEST_RELEASE", (roomId, newTiming, numOfUsers) => {
+		socket.on("REQUEST_RELEASE", (roomId, newTiming) => {
 			let hasBufferer = false;
 			bufferReadysMap.forEach((entry, buffererId) => {
 				console.log(entry);
@@ -96,6 +100,8 @@ module.exports = (io) => {
 					`${socket.id} already has a bufferer, ignoring this release request...`
 				);
 			} else {
+				const numOfUsers = roomSocketMap.get(roomId).length - 1;
+
 				console.log(
 					`${socket.id} requests for ${numOfUsers} unique readys at ${newTiming}`
 				);
@@ -112,59 +118,58 @@ module.exports = (io) => {
 		});
 
 		// 6. Tell the server that this user is ready to resume
-		socket.on(
-			"REQUEST_RELEASE_READY",
-			(roomId, buffererId, numOfUsers, releaseSelfCallback) => {
-				if (!bufferReadysMap.has(buffererId)) {
-					if (roomHoldSet.has(roomId)) {
-						console.log(
-							`${socket.id}: Buffer entry for ${buffererId} not found but the buffering room exists, creating a buffer entry... (Total: 1)`
-						);
+		socket.on("REQUEST_RELEASE_READY", (roomId, buffererId, releaseSelfCallback) => {
+			if (!bufferReadysMap.has(buffererId)) {
+				if (roomHoldSet.has(roomId)) {
+					console.log(
+						`${socket.id}: Buffer entry for ${buffererId} not found but the buffering room exists, creating a buffer entry... (Total: 1)`
+					);
 
-						if (numOfUsers == 1) {
-							console.log(
-								`${buffererId} receive 1 total unique readys, releasing all users in ${roomId} by REQUEST_RELEASE_READY`
-							);
-							console.log(`Removing ${roomId} from holdSet`);
-							roomHoldSet.delete(roomId);
-							socket.to(roomId).emit("RELEASE");
-							releaseSelfCallback();
-						} else {
-							const readySet = new Set();
-							readySet.add(socket.id);
-							bufferReadysMap.set(buffererId, {
-								roomId,
-								readys: readySet,
-								target: numOfUsers,
-							});
-						}
-					} else {
-						console.log(
-							`Buffer entry for ${buffererId} not found and there is no room for it, ignoring this ready...`
-						);
-					}
-				} else {
-					const newEntry = bufferReadysMap.get(buffererId);
-					newEntry.readys.add(socket.id);
+					const numOfUsers = roomSocketMap.get(roomId).length - 1;
 
-					console.log(`${socket.id} sent a ready (Total: ${newEntry.readys.size})`);
-
-					if (newEntry.readys.size >= newEntry.target) {
+					if (numOfUsers == 1) {
 						console.log(
-							`${buffererId} receive ${newEntry.readys.size} total unique readys, releasing all users in ${roomId} REQUEST_RELEASE_ALL _ HAS BUFFER`
+							`${buffererId} receive 1 total unique readys, releasing all users in ${roomId} by REQUEST_RELEASE_READY`
 						);
 						console.log(`Removing ${roomId} from holdSet`);
-
-						bufferReadysMap.delete(buffererId);
 						roomHoldSet.delete(roomId);
 						socket.to(roomId).emit("RELEASE");
 						releaseSelfCallback();
 					} else {
-						bufferReadysMap.set(buffererId, newEntry);
+						const readySet = new Set();
+						readySet.add(socket.id);
+						bufferReadysMap.set(buffererId, {
+							roomId,
+							readys: readySet,
+							target: numOfUsers,
+						});
 					}
+				} else {
+					console.log(
+						`Buffer entry for ${buffererId} not found and there is no room for it, ignoring this ready...`
+					);
+				}
+			} else {
+				const newEntry = bufferReadysMap.get(buffererId);
+				newEntry.readys.add(socket.id);
+
+				console.log(`${socket.id} sent a ready (Total: ${newEntry.readys.size})`);
+
+				if (newEntry.readys.size >= newEntry.target) {
+					console.log(
+						`${buffererId} receive ${newEntry.readys.size} total unique readys, releasing all users in ${roomId} REQUEST_RELEASE_ALL _ HAS BUFFER`
+					);
+					console.log(`Removing ${roomId} from holdSet`);
+
+					bufferReadysMap.delete(buffererId);
+					roomHoldSet.delete(roomId);
+					socket.to(roomId).emit("RELEASE");
+					releaseSelfCallback();
+				} else {
+					bufferReadysMap.set(buffererId, newEntry);
 				}
 			}
-		);
+		});
 
 		// 7. Ask all other users to resume from holding
 		socket.on("REQUEST_RELEASE_ALL", (roomId) => {
