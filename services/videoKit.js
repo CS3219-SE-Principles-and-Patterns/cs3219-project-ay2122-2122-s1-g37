@@ -129,29 +129,14 @@ module.exports = (io) => {
 
 		// 5. Ask all other users to prepare to resume at a given timing
 		socket.on("REQUEST_RELEASE", (roomId, newTiming) => {
-			let hasBufferer = false;
-			bufferReadysMap.forEach((entry, buffererId) => {
-				console.log(entry);
-				if (entry.roomId === roomId) {
-					hasBufferer = true;
-				}
-			});
-			console.log(`hasBufferer: ${hasBufferer}`);
-			console.log(bufferReadysMap);
-
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
 			} else if (bufferReadysMap.has(socket.id)) {
 				console.log(
 					`${socket.id} is already waiting for release, ignoring this release request...`
 				);
-			} else if (hasBufferer) {
-				console.log(
-					`${socket.id} already has a bufferer, ignoring this release request...`
-				);
 			} else {
 				const numOfUsers = roomSocketMap.get(roomId).length - 1;
-
 				console.log(
 					`${socket.id} requests for ${numOfUsers} unique readys at ${newTiming}`
 				);
