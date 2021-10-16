@@ -5,7 +5,7 @@ const roomSocketMap = new Map();
 // Mapping a bufferer to a set of users that is ready to resume
 const bufferReadysMap = new Map();
 // Store rooms that are being held
-const roomHoldSet = new Set();
+const roomHoldersMap = new Map();
 
 module.exports = (io) => {
 	const videoIO = io.of("/video");
@@ -14,7 +14,7 @@ module.exports = (io) => {
 		console.log(`${socket.id} connected to videoIO`);
 
 		socket.on("REQUEST_ROOM_STATUS", (roomId) => {
-			videoIO.to(socket.id).emit("RECEIVE_ROOM_STATUS", roomHoldSet.has(roomId));
+			videoIO.to(socket.id).emit("RECEIVE_ROOM_STATUS", roomHoldersMap.has(roomId));
 		});
 
 		// 1. Join room via id
@@ -35,10 +35,46 @@ module.exports = (io) => {
 
 		// 2. Cleanup after a user disconnects
 		socket.on("disconnect", () => {
+			// Remove user from roomSocket map
 			if (socketRoomMap.has(socket.id) && roomSocketMap.has(socketRoomMap.get(socket.id))) {
 				const roomId = socketRoomMap.get(socket.id);
 				const newSockets = roomSocketMap.get(roomId).filter((id) => id != socket.id);
 				roomSocketMap.set(roomId, newSockets);
+			}
+
+			const roomId = socketRoomMap.get(socket.id);
+			if (
+				bufferReadysMap.has(socket.id) ||
+				(roomHoldersMap.has(roomId) && roomHoldersMap.get(roomId) == socket.id)
+			) {
+				// Recovery if the disconnected user is a bufferer
+				console.log("RECOVERY from loss of bufferer when sync-ing");
+			} else {
+				// Recovery if the disconnected user is not a bufferer
+				console.log("RECOVERY from loss of a user when sync-ing");
+				const buffererId = roomHoldersMap.get(roomId);
+				if (bufferReadysMap.has(buffererId)) {
+					bufferReadysMap.get(buffererId).readys.delete(socket.id);
+					bufferReadysMap.get(buffererId).target -= 1;
+
+					console.log(`Excluded ${socket.id} from ${buffererId}'s buffer entry`);
+
+					if (
+						bufferReadysMap.get(buffererId).readys.size >=
+						bufferReadysMap.get(buffererId).target
+					) {
+						console.log(
+							`${buffererId} receive ${
+								bufferReadysMap.get(buffererId).readys.size
+							} total unique readys, releasing all users in ${roomId} REQUEST_RELEASE_ALL _ HAS BUFFER`
+						);
+						console.log(`Removing ${roomId} from holdSet`);
+
+						bufferReadysMap.delete(buffererId);
+						roomHoldersMap.delete(roomId);
+						socket.to(roomId).emit("RELEASE");
+					}
+				}
 			}
 		});
 
@@ -66,12 +102,12 @@ module.exports = (io) => {
 		socket.on("REQUEST_HOLD", (roomId) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
-			} else if (roomHoldSet.has(roomId)) {
+			} else if (roomHoldersMap.has(roomId)) {
 				console.log(
 					`Room ${roomId} is still being held, ignoring this HOLD request from ${socket.id}...`
 				);
 			} else {
-				roomHoldSet.add(roomId);
+				roomHoldersMap.set(roomId, socket.id);
 				socket.to(roomId).emit("HOLD", socket.id);
 				console.log(`${socket.id} ask all other users to HOLD`);
 			}
@@ -120,7 +156,7 @@ module.exports = (io) => {
 		// 6. Tell the server that this user is ready to resume
 		socket.on("REQUEST_RELEASE_READY", (roomId, buffererId, releaseSelfCallback) => {
 			if (!bufferReadysMap.has(buffererId)) {
-				if (roomHoldSet.has(roomId)) {
+				if (roomHoldersMap.has(roomId)) {
 					console.log(
 						`${socket.id}: Buffer entry for ${buffererId} not found but the buffering room exists, creating a buffer entry... (Total: 1)`
 					);
@@ -132,9 +168,8 @@ module.exports = (io) => {
 							`${buffererId} receive 1 total unique readys, releasing all users in ${roomId} by REQUEST_RELEASE_READY`
 						);
 						console.log(`Removing ${roomId} from holdSet`);
-						roomHoldSet.delete(roomId);
-						socket.to(roomId).emit("RELEASE");
-						releaseSelfCallback();
+						roomHoldersMap.delete(roomId);
+						videoIO.to(roomId).emit("RELEASE");
 					} else {
 						const readySet = new Set();
 						readySet.add(socket.id);
@@ -162,7 +197,7 @@ module.exports = (io) => {
 					console.log(`Removing ${roomId} from holdSet`);
 
 					bufferReadysMap.delete(buffererId);
-					roomHoldSet.delete(roomId);
+					roomHoldersMap.delete(roomId);
 					socket.to(roomId).emit("RELEASE");
 					releaseSelfCallback();
 				} else {
@@ -179,7 +214,7 @@ module.exports = (io) => {
 				console.log(`${socket.id} releasing all users in ${roomId} by REQUEST_RELEASE_ALL`);
 				console.log(`Removing ${roomId} from holdSet`);
 				bufferReadysMap.delete(socket.id);
-				roomHoldSet.delete(roomId);
+				roomHoldersMap.delete(roomId);
 				socket.to(roomId).emit("RELEASE");
 			}
 		});
