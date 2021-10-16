@@ -54,25 +54,22 @@ module.exports = (io) => {
 				console.log("RECOVERY from loss of a user when sync-ing");
 				const buffererId = roomHoldersMap.get(roomId);
 				if (bufferReadysMap.has(buffererId)) {
-					bufferReadysMap.get(buffererId).readys.delete(socket.id);
-					bufferReadysMap.get(buffererId).target -= 1;
+					const bufferEntry = bufferReadysMap.get(buffererId);
+
+					bufferEntry.readys.delete(socket.id);
+					bufferEntry.target -= 1;
 
 					console.log(`Excluded ${socket.id} from ${buffererId}'s buffer entry`);
 
-					if (
-						bufferReadysMap.get(buffererId).readys.size >=
-						bufferReadysMap.get(buffererId).target
-					) {
+					if (bufferEntry.readys.size >= bufferEntry.target) {
 						console.log(
-							`${buffererId} receive ${
-								bufferReadysMap.get(buffererId).readys.size
-							} total unique readys, releasing all users in ${roomId} REQUEST_RELEASE_ALL _ HAS BUFFER`
+							`${buffererId} receive ${bufferEntry.readys.size} total readys, releasing all users in ${roomId}`
 						);
-						console.log(`Removing ${roomId} from holdSet`);
-
 						bufferReadysMap.delete(buffererId);
 						roomHoldersMap.delete(roomId);
 						socket.to(roomId).emit("RELEASE");
+					} else {
+						bufferReadysMap.set(socket.id, bufferEntry);
 					}
 				}
 			}
