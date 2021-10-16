@@ -63,7 +63,9 @@ module.exports = (io) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
 			} else if (roomHoldSet.has(roomId)) {
-				console.log(`Room ${roomId} is still being held, ignoring this HOLD request...`);
+				console.log(
+					`Room ${roomId} is still being held, ignoring this HOLD request from ${socket.id}...`
+				);
 			} else {
 				roomHoldSet.add(roomId);
 				socket.to(roomId).emit("HOLD", socket.id);
@@ -73,11 +75,25 @@ module.exports = (io) => {
 
 		// 5. Ask all other users to prepare to resume at a given timing
 		socket.on("REQUEST_RELEASE", (roomId, newTiming, numOfUsers) => {
+			let hasBufferer = false;
+			bufferReadysMap.forEach((entry, buffererId) => {
+				console.log(entry);
+				if (entry.roomId === roomId) {
+					hasBufferer = true;
+				}
+			});
+			console.log(`hasBufferer: ${hasBufferer}`);
+			console.log(bufferReadysMap);
+
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
 			} else if (bufferReadysMap.has(socket.id)) {
 				console.log(
 					`${socket.id} is already waiting for release, ignoring this release request...`
+				);
+			} else if (hasBufferer) {
+				console.log(
+					`${socket.id} already has a bufferer, ignoring this release request...`
 				);
 			} else {
 				console.log(
@@ -85,7 +101,11 @@ module.exports = (io) => {
 				);
 
 				if (!bufferReadysMap.has(socket.id)) {
-					bufferReadysMap.set(socket.id, { readys: new Set(), target: numOfUsers });
+					bufferReadysMap.set(socket.id, {
+						roomId,
+						readys: new Set(),
+						target: numOfUsers,
+					});
 				}
 				socket.to(roomId).emit("PREPARE_RELEASE", newTiming);
 			}
@@ -103,7 +123,7 @@ module.exports = (io) => {
 
 						if (numOfUsers == 1) {
 							console.log(
-								`${buffererId} receive 1 total unique readys, releasing all users in ${roomId}`
+								`${buffererId} receive 1 total unique readys, releasing all users in ${roomId} by REQUEST_RELEASE_READY`
 							);
 							console.log(`Removing ${roomId} from holdSet`);
 							roomHoldSet.delete(roomId);
@@ -113,6 +133,7 @@ module.exports = (io) => {
 							const readySet = new Set();
 							readySet.add(socket.id);
 							bufferReadysMap.set(buffererId, {
+								roomId,
 								readys: readySet,
 								target: numOfUsers,
 							});
@@ -130,7 +151,7 @@ module.exports = (io) => {
 
 					if (newEntry.readys.size >= newEntry.target) {
 						console.log(
-							`${buffererId} receive ${newEntry.readys.size} total unique readys, releasing all users in ${roomId}`
+							`${buffererId} receive ${newEntry.readys.size} total unique readys, releasing all users in ${roomId} REQUEST_RELEASE_ALL _ HAS BUFFER`
 						);
 						console.log(`Removing ${roomId} from holdSet`);
 
@@ -150,8 +171,9 @@ module.exports = (io) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
 			} else {
-				console.log(`${socket.id} releasing all users in ${roomId}`);
+				console.log(`${socket.id} releasing all users in ${roomId} by REQUEST_RELEASE_ALL`);
 				console.log(`Removing ${roomId} from holdSet`);
+				bufferReadysMap.delete(socket.id);
 				roomHoldSet.delete(roomId);
 				socket.to(roomId).emit("RELEASE");
 			}

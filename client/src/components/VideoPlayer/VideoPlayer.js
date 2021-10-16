@@ -20,6 +20,8 @@ const timeout = (ms) => {
 const debounce = (func, duration) => {
 	let timeout;
 	return (...args) => {
+		console.log(`debounce playing with ${args[0]}`);
+
 		const later = () => {
 			clearTimeout(timeout);
 			func(...args);
@@ -73,9 +75,15 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const syncTo = useCallback(
 		(timing) => {
 			// console.log(`isPlaying: ${isPlaying} / buffererId: ${buffererId} / timing: ${timing}`);
+			console.log(
+				`playerRef: ${playerRef} / playerRef.curr: ${
+					playerRef.current
+				} / playerRef.curr.currentTime: ${playerRef.current.getCurrentTime()}`
+			);
 			if (
 				socket &&
 				isPlaying &&
+				playerRef.current &&
 				buffererId === UNAVALIABLE &&
 				timing !== UNAVALIABLE &&
 				Math.abs(playerRef.current.getCurrentTime() - timing) > THRESHOLD_SYNC
@@ -184,7 +192,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	}, []);
 	const pauseCallback = () => {
 		console.log(`PAUSE, isPlaying: ${isPlaying}`);
-		if (isPlaying) {
+		if (isPlaying && buffererId === UNAVALIABLE) {
 			console.log("PAUSE ALL");
 			// Host: Broadcast PAUSE event to all users
 			socket.emit("PAUSE_ALL", roomId);
