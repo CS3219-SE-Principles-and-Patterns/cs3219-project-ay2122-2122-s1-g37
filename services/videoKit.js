@@ -49,6 +49,23 @@ module.exports = (io) => {
 			) {
 				// Recovery if the disconnected user is a bufferer
 				console.log("RECOVERY from loss of bufferer when sync-ing");
+				const buffererId = roomHoldersMap.get(roomId);
+				const newBuffererId = roomSocketMap.get(roomId)[0];
+
+				if (bufferReadysMap.has(buffererId)) {
+					const bufferEntry = bufferReadysMap.get(buffererId);
+					const newEntry = {
+						roomId: bufferEntry.roomId,
+						readys: bufferEntry.readys,
+						target: bufferEntry.target - 1,
+					};
+
+					newEntry.readys.delete(newBuffererId);
+					bufferReadysMap.delete(buffererId);
+					bufferReadysMap.set(newBuffererId, newEntry);
+				}
+
+				videoIO.to(roomId).emit("SET_BUFFERER", newBuffererId);
 			} else {
 				// Recovery if the disconnected user is not a bufferer
 				console.log("RECOVERY from loss of a user when sync-ing");

@@ -348,6 +348,29 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		}
 	};
 
+	// Assign new bufferer when bufferer disconnects and left this user stranding
+	const setBufferer = useCallback(
+		(newBuffererId) => {
+			setBuffererId(newBuffererId);
+			if (user.isHost) {
+				setIsPlaying(true);
+			}
+		},
+		[user]
+	);
+
+	// Reset when bufferer disconnects and left this user stranding
+	const clearBuffer = useCallback(() => {
+		if (socket) {
+			console.log(`clear buffer for ${socket.id}`);
+			setBuffererId(UNAVALIABLE);
+			if (user.isHost) {
+				setIsPlaying(true);
+				playerRef.current.seekTo(0, "seconds");
+			}
+		}
+	}, [socket, user]);
+
 	// Apply event handlers when the player re-renders
 	useEffect(() => {
 		if (socket) {
@@ -363,6 +386,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			socket.on("PLAYBACK_RATE_CHANGE", playbackRateChange);
 			socket.on("QUERY_SETTINGS", querySettings);
 			socket.on("RECEIVE_SETTINGS", receiveSettings);
+			socket.on("CLEAR_BUFFER", clearBuffer);
+			socket.on("SET_BUFFERER", setBufferer);
 			return () => {
 				socket.off("connect", attemptsJoin);
 				socket.off("RECEIVE_ROOM_STATUS", receiveRoomStatus);
@@ -376,6 +401,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 				socket.off("PLAYBACK_RATE_CHANGE", playbackRateChange);
 				socket.off("QUERY_SETTINGS", querySettings);
 				socket.off("RECEIVE_SETTINGS", receiveSettings);
+				socket.off("CLEAR_BUFFER", clearBuffer);
+				socket.off("SET_BUFFERER", setBufferer);
 			};
 		}
 	}, [
@@ -393,6 +420,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		querySettings,
 		attemptsJoin,
 		receiveRoomStatus,
+		clearBuffer,
+		setBufferer,
 	]);
 
 	return (
