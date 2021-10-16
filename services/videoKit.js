@@ -205,5 +205,21 @@ module.exports = (io) => {
 				socket.to(roomId).emit("PLAYBACK_RATE_CHANGE", newRate);
 			}
 		});
+
+		socket.on("REQUEST_SETTINGS", (roomId) => {
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("QUERY_SETTINGS", socket.id);
+			}
+		});
+
+		socket.on("REPLY_SETTINGS", (roomId, recipientId, settings) => {
+			if (roomId === "") {
+				console.log(`Invalid room ID: ${roomId}`);
+			} else {
+				socket.to(roomId).emit("RECEIVE_SETTINGS", recipientId, settings);
+			}
+		});
 	});
 };

@@ -75,11 +75,11 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	const syncTo = useCallback(
 		(timing) => {
 			// console.log(`isPlaying: ${isPlaying} / buffererId: ${buffererId} / timing: ${timing}`);
-			console.log(
-				`playerRef: ${playerRef} / playerRef.curr: ${
-					playerRef.current
-				} / playerRef.curr.currentTime: ${playerRef.current.getCurrentTime()}`
-			);
+			// console.log(
+			// 	`playerRef: ${playerRef} / playerRef.curr: ${
+			// 		playerRef.current
+			// 	} / playerRef.curr.currentTime: ${playerRef.current.getCurrentTime()}`
+			// );
 			if (
 				socket &&
 				isPlaying &&
@@ -144,11 +144,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			// Self: To-do - Update DB's URL
 		}
 	}, [socket, roomId, url]);
-	// useEffect(() => {
-	// 	if (isInitialSync) {
-	// 		syncTo(0);
-	// 	}
-	// }, [videoUrl, syncTo, isInitialSync]);
 
 	// Receiving and broadcasting synchronized timing
 	const receiveTiming = useCallback(
@@ -209,7 +204,46 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 	}, []);
 	const rateChangeCallback = (rateObj) => {
 		console.log(`PLAYBACK SPEED CHANGE TO ${rateObj.data}`);
+		setPlaybackRate(rateObj.data);
 		socket.emit("PLAYBACK_RATE_CHANGE_ALL", roomId, rateObj.data);
+	};
+
+	// Message SYNCHRONISE_SETTINGS event to host
+	const querySettings = useCallback(
+		(recipientId) => {
+			if (user.isHost) {
+				const settings = {
+					isPlaying,
+					playbackRate,
+				};
+
+				console.log(
+					`Host ${socket.id} provides a setting of isPlaying: ${settings.isPlaying}, playbackRate: ${settings.playbackRate}`
+				);
+				socket.emit("REPLY_SETTINGS", roomId, recipientId, settings);
+			}
+		},
+		[isPlaying, playbackRate, roomId, socket, user.isHost]
+	);
+
+	const receiveSettings = useCallback(
+		(recipientId, settings) => {
+			if (socket.id === recipientId) {
+				console.log(
+					`Receive new settings: isPlaying: ${settings.isPlaying}, playbackRate: ${settings.playbackRate}`
+				);
+				setPlaybackRate(settings.playbackRate);
+				setIsPlaying(settings.isPlaying);
+			}
+		},
+		[socket]
+	);
+
+	const synchroniseSettings = () => {
+		if (!user.isHost) {
+			console.log(`${socket.id} request for settings...`);
+			socket.emit("REQUEST_SETTINGS", roomId);
+		}
 	};
 
 	// Callback when the player completed initial loading and ready to go
@@ -219,6 +253,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		// Attach callback for change in playback rate
 		player.getInternalPlayer().addEventListener("onPlaybackRateChange", rateChangeCallback);
 
+		synchroniseSettings();
 		bufferStartCallback();
 	};
 
@@ -305,6 +340,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			socket.on("PLAY", play);
 			socket.on("PAUSE", pause);
 			socket.on("PLAYBACK_RATE_CHANGE", playbackRateChange);
+			socket.on("QUERY_SETTINGS", querySettings);
+			socket.on("RECEIVE_SETTINGS", receiveSettings);
 			return () => {
 				socket.off("connect", initialize);
 				socket.off("RECEIVE_URL", receiveUrl);
@@ -315,6 +352,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 				socket.off("PLAY", play);
 				socket.off("PAUSE", pause);
 				socket.off("PLAYBACK_RATE_CHANGE", playbackRateChange);
+				socket.off("QUERY_SETTINGS", querySettings);
+				socket.off("RECEIVE_SETTINGS", receiveSettings);
 			};
 		}
 	}, [
@@ -328,6 +367,8 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		playbackRateChange,
 		play,
 		pause,
+		receiveSettings,
+		querySettings,
 	]);
 
 	return (
