@@ -16,7 +16,6 @@ const DELAY_DEBOUNCED_PLAYING = 250;
 const timeout = (ms) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 };
-
 const debounce = (func, duration) => {
 	let timeout;
 	return (...args) => {
@@ -30,7 +29,6 @@ const debounce = (func, duration) => {
 		timeout = setTimeout(later, duration);
 	};
 };
-
 const throttleSetState = (setState, delay) => {
 	let throttleTimeout = null;
 	let storedState = null;
@@ -72,6 +70,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 
 	const playerRef = useRef(null);
 
+	// Synchronize to the given timing
 	const syncTo = useCallback(
 		(timing) => {
 			// console.log(`isPlaying: ${isPlaying} / buffererId: ${buffererId} / timing: ${timing}`);
@@ -109,11 +108,9 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			const [roomInfo] = await Promise.all([placeholderRoomInfo, timeout(1000)]);
 
 			if (roomInfo.url.length > 0) {
-				// Load up URL from the room info
 				setVideoUrl(roomInfo.url);
 				console.log(`${socket.id} found URL for the room ${roomId}, loading it to player`);
 			} else {
-				// Load up placeholder video if DB has no URL
 				setVideoUrl(fallbackURL);
 				console.log(
 					`${socket.id} cannot found URL for the room ${roomId}, using fallback...`
@@ -122,7 +119,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		});
 	}, [socket, roomId]);
 
-	// Receiving and broadcasting URLs
+	// Synchronize URL when a new URL is entered
 	const receiveUrl = useCallback(
 		(url) => {
 			setIsInitialSync(true);
@@ -145,7 +142,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		}
 	}, [socket, roomId, url]);
 
-	// Receiving and broadcasting synchronized timing
+	// Synchronize timing of the users
 	const receiveTiming = useCallback(
 		({ timing }) => {
 			if (!user.isHost) {
@@ -198,7 +195,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		}
 	};
 
-	// Broadcast PLAYBACK_RATE_CHANGE event to all other users
+	// Synchronize the playback rate between users
 	const playbackRateChange = useCallback((newRate) => {
 		setPlaybackRate(newRate);
 	}, []);
@@ -208,7 +205,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		socket.emit("PLAYBACK_RATE_CHANGE_ALL", roomId, rateObj.data);
 	};
 
-	// Message SYNCHRONISE_SETTINGS event to host
+	// Synchronize the playback settings between users
 	const querySettings = useCallback(
 		(recipientId) => {
 			if (user.isHost) {
@@ -225,7 +222,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		},
 		[isPlaying, playbackRate, roomId, socket, user.isHost]
 	);
-
 	const receiveSettings = useCallback(
 		(recipientId, settings) => {
 			if (socket.id === recipientId) {
@@ -238,7 +234,6 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		},
 		[socket]
 	);
-
 	const synchroniseSettings = () => {
 		if (!user.isHost) {
 			console.log(`${socket.id} request for settings...`);
@@ -257,7 +252,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		bufferStartCallback();
 	};
 
-	// Broadcast BUFFERING to all other users
+	// Initialize a HOLD when a user buffers
 	const hold = useCallback((sourceId) => {
 		console.log(`HOLD`);
 		setIsPlaying(false);
@@ -275,6 +270,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		}
 	};
 
+	// When buffering completes, sync-up with other users via handshaking
 	const prepareRelease = useCallback(
 		(newTiming) => {
 			console.log("PREPARE FOR RELEASE");
@@ -328,7 +324,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 		}
 	};
 
-	// Reset socket event handlers when VideoPlayer re-renders
+	// Apply event handlers when the player re-renders
 	useEffect(() => {
 		if (socket) {
 			socket.on("connect", initialize);

@@ -206,6 +206,7 @@ module.exports = (io) => {
 			}
 		});
 
+		// Ask the room's host for the playback setting
 		socket.on("REQUEST_SETTINGS", (roomId) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
@@ -214,6 +215,7 @@ module.exports = (io) => {
 			}
 		});
 
+		// PM a reciepient with a playback setting
 		socket.on("REPLY_SETTINGS", (roomId, recipientId, settings) => {
 			if (roomId === "") {
 				console.log(`Invalid room ID: ${roomId}`);
