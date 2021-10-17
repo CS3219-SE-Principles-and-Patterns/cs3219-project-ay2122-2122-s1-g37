@@ -2,8 +2,15 @@ module.exports = {
     apps: [
       {
         name: 'peerwatch-server',
-        script: 'npx',
-        args: 'serve -s build -l 3000 -n',
+        script: 'npm run server',
+        interpreter: 'none',
+        env: {
+          NODE_ENV: 'development',
+        },
+      },
+      {
+        name: 'peerwatch-client',
+        script: 'npm run client',
         interpreter: 'none',
         env: {
           NODE_ENV: 'development',
