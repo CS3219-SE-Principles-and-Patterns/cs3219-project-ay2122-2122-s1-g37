@@ -3,10 +3,10 @@ name: tests
 on:
   push:
     branches:
-      - ci-cd
+      - test-ci
   pull_request:
     branches:
-      - ci-cd
+      - test-ci
 
 jobs:
     cypress-test:
