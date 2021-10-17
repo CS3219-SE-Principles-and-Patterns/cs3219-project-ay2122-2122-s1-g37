@@ -59,8 +59,10 @@ jobs:
         # Install project dependencies, test and build
         - name: Install dependencies
           run: npm install
-        - name: Run build
-          run: npm run build
+        - name: Run server
+          run: npm run server
+        - name: Run client
+          run: npm run client
 
     deploy:
       name: CD Pipeline
