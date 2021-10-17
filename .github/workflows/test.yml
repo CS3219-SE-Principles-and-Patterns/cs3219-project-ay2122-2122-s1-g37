@@ -85,8 +85,6 @@ jobs:
         # Install project dependencies and build
         - name: Install dependencies
           run: npm install
-        - name: Run build
-          run: npm run build
 
         # Install AWS CLI 2
         - name: Install AWS CLI 2
