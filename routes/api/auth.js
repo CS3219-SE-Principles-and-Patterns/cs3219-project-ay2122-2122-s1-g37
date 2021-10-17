@@ -53,6 +53,7 @@ router.post("/recover", async (req, res) => {
 	const transporter = nodemailer.createTransport({
 		service: "gmail",
 		auth: {
+			// The credentials posted in group chat
 			user: process.env.EMAIL_USER,
 			pass: process.env.EMAIL_PASS
 		}
@@ -60,6 +61,7 @@ router.post("/recover", async (req, res) => {
 	
 	const message = {
 		from: "PeerWatch Team <peerwatchteam@gmail.com>",
+		// Can change to some disposable email to test
 		to: email,
 		subject: "PeerWatch Account Password Reset",
 		text: `Dear User,
@@ -92,7 +94,7 @@ Peerwatch Team`
 	})
 });
 
-router.put("/reset/:_id/:_token", resetValidation, async (req, res) => {
+router.put("/reset/:_id", resetValidation, async (req, res) => {
 		try {
 			// change the errors when want to test what went wrong
 			const randomID = req.params._id;
@@ -115,7 +117,8 @@ router.put("/reset/:_id/:_token", resetValidation, async (req, res) => {
 				});
 			}
 			
-			const resetToken = req.params._token;
+			const authHeader = req.headers["authorization"];
+			const resetToken = authHeader && authHeader.split(" ")[1];
 			if (resetToken == null) {
 				// no token
 				console.log("resetToken not given")
@@ -266,7 +269,8 @@ router.get("/login", async (req, res) => {
 });
 
 router.get("/authtoken", (req, res) => {
-	const token = req.body.token;
+	const authHeader = req.headers["authorization"];
+	const token = authHeader && authHeader.split(" ")[1];
 	if (token == null) {
 		console.log("no token provided");
 		
