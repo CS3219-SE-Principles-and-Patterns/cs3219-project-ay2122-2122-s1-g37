@@ -58,7 +58,7 @@ const throttleSetState = (setState, delay) => {
 	return throttledSetState;
 };
 
-function VideoPlayer({ socket, roomId, users, user, url }) {
+function VideoPlayer({ socket, roomId, users, user, url, isWaiting, setIsWaiting }) {
 	const [videoUrl, setVideoUrl] = useState("");
 	const [isPlaying, setIsPlaying] = useState(true);
 
@@ -68,7 +68,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 
 	const [debouncedSetPlaying] = useState(() => debounce(setIsPlaying, DELAY_DEBOUNCED_PLAYING));
 
-	const [isWaiting, setIsWaiting] = useState(true);
+	// const [isWaiting, setIsWaiting] = useState(true);
 
 	const playerRef = useRef(null);
 
@@ -133,7 +133,7 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 				initialize();
 			}
 		},
-		[attemptsJoin, initialize, roomId]
+		[attemptsJoin, initialize, roomId, setIsWaiting]
 	);
 
 	// Synchronize URL when a new URL is entered
@@ -438,7 +438,10 @@ function VideoPlayer({ socket, roomId, users, user, url }) {
 			onReady={readyCallback}
 			onBuffer={bufferStartCallback}
 			onBufferEnd={bufferEndCallback}
-			style={{ pointerEvents: buffererId === UNAVALIABLE ? "auto" : "none" }}
+			style={{
+				pointerEvents: buffererId === UNAVALIABLE ? "auto" : "none",
+				filter: buffererId === UNAVALIABLE ? "" : "blur(5px)",
+			}}
 		/>
 	);
 }
