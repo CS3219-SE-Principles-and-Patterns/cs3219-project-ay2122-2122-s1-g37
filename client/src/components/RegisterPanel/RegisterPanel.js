@@ -1,25 +1,54 @@
-import React from "react";
+import React, { useRef } from "react";
 import Panel from "../Panel/Panel";
 import { ButtonContainerWrapper, ButtonWrapper, TextFieldWrapper } from "./RegisterPanel.styled";
 
-function RegisterPanel() {
+function RegisterPanel({ cancelCallback }) {
+	const nameRef = useRef(null);
+	const emailRef = useRef(null);
+	const passRef = useRef(null);
+	const passAgainRef = useRef(null);
+
+	const register = () => {
+		console.log(
+			`Register with name: ${nameRef.current.value}, email: ${emailRef.current.value}, password: ${passRef.current.value}, passwordAgain: ${passAgainRef.current.value}`
+		);
+	};
+
 	return (
 		<Panel rowGap="1em">
-			<TextFieldWrapper variant="filled" label="Display name" helperText="Enter your name" />
 			<TextFieldWrapper
+				required
+				inputRef={nameRef}
+				variant="filled"
+				label="Display name"
+				helperText="Enter your name"
+			/>
+			<TextFieldWrapper
+				required
+				inputRef={emailRef}
 				variant="filled"
 				label="Email address"
 				helperText="Enter your email address"
 			/>
-			<TextFieldWrapper variant="filled" label="Password" helperText="Enter your password" />
 			<TextFieldWrapper
+				required
+				inputRef={passRef}
+				variant="filled"
+				label="Password"
+				type="password"
+				helperText="Enter your password"
+			/>
+			<TextFieldWrapper
+				required
+				inputRef={passAgainRef}
 				variant="filled"
 				label="Re-enter password"
+				type="password"
 				helperText="Enter your password again"
 			/>
 			<ButtonContainerWrapper>
-				<ButtonWrapper>Register</ButtonWrapper>
-				<ButtonWrapper>Cancel</ButtonWrapper>
+				<ButtonWrapper onClick={register}>Register</ButtonWrapper>
+				<ButtonWrapper onClick={cancelCallback}>Cancel</ButtonWrapper>
 			</ButtonContainerWrapper>
 		</Panel>
 	);

@@ -10,4 +10,8 @@ export const PanelWrapper = styled.div`
 	justify-items: center;
 
 	padding: 25px;
+
+	p {
+		color: ${(props) => props.theme.white};
+	}
 `;
