@@ -15,7 +15,7 @@ const LandingPageWrapper = styled.div`
 	}
 
 	.landing-center {
-		width: 60%;
+		width: 50%;
 
 		display: grid;
 		grid-template-columns: 1fr 1fr;
