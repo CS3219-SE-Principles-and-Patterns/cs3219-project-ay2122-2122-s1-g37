@@ -1,9 +1,8 @@
-import { Button } from "@mui/material";
 import React from "react";
 import { ButtonWrapper } from "./LogoutButton.styled";
 
-function LogoutButton() {
-	return <ButtonWrapper>Logout</ButtonWrapper>;
+function LogoutButton({ clickCallback }) {
+	return <ButtonWrapper onClick={clickCallback}>Logout</ButtonWrapper>;
 }
 
 export default LogoutButton;

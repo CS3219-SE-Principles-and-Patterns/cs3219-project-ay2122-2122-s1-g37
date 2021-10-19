@@ -14,7 +14,7 @@ const LandingPageWrapper = styled.div`
 		color: ${(props) => props.theme.white};
 	}
 
-	.landing-center {
+	.landing-room-center {
 		width: 50%;
 
 		display: grid;
@@ -23,7 +23,7 @@ const LandingPageWrapper = styled.div`
 		grid-auto-rows: minmax(300px, auto);
 	}
 
-	.landing-bottom {
+	.landing-room-bottom {
 		width: 60%;
 		padding-top: 20px;
 
@@ -31,6 +31,10 @@ const LandingPageWrapper = styled.div`
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
+	}
+
+	.landing-account-center {
+		width: 30%;
 	}
 `;
 

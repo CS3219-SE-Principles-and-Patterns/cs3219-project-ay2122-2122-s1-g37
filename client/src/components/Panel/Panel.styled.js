@@ -5,7 +5,7 @@ export const PanelWrapper = styled.div`
 
 	display: grid;
 	grid-template-columns: 1fr;
-	// grid-row-gap: 1em;
+	grid-row-gap: ${(props) => (props.rowGap ? props.rowGap : "0em")};
 	align-items: center;
 	justify-items: center;
 
