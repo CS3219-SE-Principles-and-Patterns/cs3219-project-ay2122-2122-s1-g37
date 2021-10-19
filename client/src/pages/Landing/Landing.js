@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 function Landing() {
     return (
         <LandingPageWrapper elevation={0}>
-            <Typography variant="h3">Landing Page</Typography>
+            <Typography variant="h3">Landing Page (TEST)</Typography>
         </LandingPageWrapper>
     )
 }
