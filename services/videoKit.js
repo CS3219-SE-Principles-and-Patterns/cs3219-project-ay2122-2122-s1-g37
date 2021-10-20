@@ -1,3 +1,5 @@
+const db = require("../services/db");
+
 // Mapping a socket to the room it is in
 const socketRoomMap = new Map();
 // Mapping a room to all the sockets in the room
@@ -6,6 +8,23 @@ const roomSocketMap = new Map();
 const bufferReadysMap = new Map();
 // Store rooms that are being held
 const roomHoldersMap = new Map();
+
+const deleteRoom = (roomId) => {
+	const sql = "DELETE FROM rooms WHERE id = ?";
+	db.query(sql, [roomId], (derr, dres) => {
+		if (derr) {
+			console.log(`Failed to delete room ${roomId}`);
+			console.log(derr.message);
+			return;
+		}
+		if (dres.affectedRows == 0) {
+			console.log(`Room ${roomId} does not exist`);
+			return;
+		}
+
+		console.log(`Room ${roomId} has been deleted`);
+	});
+};
 
 module.exports = (io) => {
 	const videoIO = io.of("/video");
@@ -35,14 +54,19 @@ module.exports = (io) => {
 
 		// 2. Cleanup after a user disconnects
 		socket.on("disconnect", () => {
+			const roomId = socketRoomMap.get(socket.id);
+
 			// Remove user from roomSocket map
 			if (socketRoomMap.has(socket.id) && roomSocketMap.has(socketRoomMap.get(socket.id))) {
-				const roomId = socketRoomMap.get(socket.id);
 				const newSockets = roomSocketMap.get(roomId).filter((id) => id != socket.id);
-				roomSocketMap.set(roomId, newSockets);
+
+				if (newSockets.length <= 0) {
+					deleteRoom(roomId);
+				} else {
+					roomSocketMap.set(roomId, newSockets);
+				}
 			}
 
-			const roomId = socketRoomMap.get(socket.id);
 			if (
 				bufferReadysMap.has(socket.id) ||
 				(roomHoldersMap.has(roomId) && roomHoldersMap.get(roomId) == socket.id)

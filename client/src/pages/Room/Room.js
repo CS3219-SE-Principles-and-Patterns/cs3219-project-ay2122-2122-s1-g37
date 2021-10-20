@@ -9,7 +9,6 @@ import RoomPageWrapper from "./Room.styled";
 import { io } from "socket.io-client";
 import URL from "../../util/url";
 import { CircularProgress, Typography } from "@mui/material";
-import axios from "axios";
 
 const initialPlayerState = {
 	url: "",
@@ -49,9 +48,6 @@ function Room() {
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
 
-	// Hack to keep track of the number of users even in closures
-	const userCountRef = useRef(0);
-
 	const linkCallback = (url) => {
 		setPlayerState({ ...playerState, url });
 	};
@@ -60,20 +56,6 @@ function Room() {
 		console.log("SETTINGS SAVED");
 		// Broadcast settings to all other users;
 	};
-
-	// Callback to delete room from DB
-	const deleteRoom = useCallback(() => {
-		// Required to wrap with 'data' for DELETE request
-		const toDelete = { data: { roomId: id } };
-		axios
-			.delete("/api/rooms/delete", toDelete)
-			.then((res) => {
-				console.log(res.data);
-			})
-			.catch((err) => {
-				console.log(err);
-			});
-	}, [id]);
 
 	// Initialize sockets
 	useEffect(() => {
@@ -85,13 +67,8 @@ function Room() {
 		return () => {
 			newChatSocket.disconnect();
 			newVideoSocket.disconnect();
-
-			// Delete room entry if this user is the only user in the room
-			if (userCountRef.current === 1) {
-				deleteRoom();
-			}
 		};
-	}, [deleteRoom]);
+	}, []);
 
 	const updateUserList = useCallback(
 		(newUserList) => {
@@ -104,7 +81,6 @@ function Room() {
 				}
 			}
 			setUsers(newUserList);
-			userCountRef.current = newUserList.length;
 		},
 		[setUsers, chatSocket]
 	);
