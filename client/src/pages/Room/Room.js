@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams } from "react-router";
 import Chatbox from "../../components/ChatBox/Chatbox";
 import RoomSettings from "../../components/RoomSettings/RoomSettings";
@@ -49,6 +49,9 @@ function Room() {
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
 
+	// Hack to keep track of the number of users even in closures
+	const userCountRef = useRef(0);
+
 	const linkCallback = (url) => {
 		setPlayerState({ ...playerState, url });
 	};
@@ -59,16 +62,19 @@ function Room() {
 	};
 
 	// Callback to delete room from DB
-	const deleteRoom = () => {
+	const deleteRoom = useCallback(() => {
+		// Required to wrap with 'data' for DELETE request
+		const toDelete = { data: { roomId: id } };
 		axios
-			.delete("/api/rooms/delete", { roomId: id })
+			.delete("/api/rooms/delete", toDelete)
 			.then((res) => {
 				console.log(res.data);
 			})
 			.catch((err) => {
 				console.log(err);
 			});
-	};
+	}, [id]);
+
 	// Initialize sockets
 	useEffect(() => {
 		const newChatSocket = io(URL.LOCAL_SERVER_URL + "/chat");
@@ -79,8 +85,13 @@ function Room() {
 		return () => {
 			newChatSocket.disconnect();
 			newVideoSocket.disconnect();
+
+			// Delete room entry if this user is the only user in the room
+			if (userCountRef.current === 1) {
+				deleteRoom();
+			}
 		};
-	}, []);
+	}, [deleteRoom]);
 
 	const updateUserList = useCallback(
 		(newUserList) => {
@@ -93,6 +104,7 @@ function Room() {
 				}
 			}
 			setUsers(newUserList);
+			userCountRef.current = newUserList.length;
 		},
 		[setUsers, chatSocket]
 	);
