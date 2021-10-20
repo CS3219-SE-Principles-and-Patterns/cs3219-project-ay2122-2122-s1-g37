@@ -10,11 +10,15 @@ permissions:
       - directory
       - file
 hooks:
-  BeforeInstall:
+  AfterInstall:
     - location: scripts/install-dependencies.sh
       timeout: 10000
       runas: ec2-user
   ApplicationStart:
     - location: scripts/reload-pm2.sh
       timeout: 300
+      runas: ec2-user
+  ValidateService:
+    - location: scripts/cleanup.sh
+      timeout: 10000
       runas: ec2-user
