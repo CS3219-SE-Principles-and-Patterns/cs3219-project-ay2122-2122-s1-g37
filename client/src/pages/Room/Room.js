@@ -9,6 +9,7 @@ import RoomPageWrapper from "./Room.styled";
 import { io } from "socket.io-client";
 import URL from "../../util/url";
 import { CircularProgress, Typography } from "@mui/material";
+import axios from "axios";
 
 const initialPlayerState = {
 	url: "",
@@ -48,8 +49,6 @@ function Room() {
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
 
-	// Handles the interaction between different components here
-
 	const linkCallback = (url) => {
 		setPlayerState({ ...playerState, url });
 	};
@@ -59,6 +58,17 @@ function Room() {
 		// Broadcast settings to all other users;
 	};
 
+	// Callback to delete room from DB
+	const deleteRoom = () => {
+		axios
+			.delete("/api/rooms/delete", { roomId: id })
+			.then((res) => {
+				console.log(res.data);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	};
 	// Initialize sockets
 	useEffect(() => {
 		const newChatSocket = io(URL.LOCAL_SERVER_URL + "/chat");
