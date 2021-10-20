@@ -8,10 +8,14 @@ function RegisterPanel({ cancelCallback }) {
 	const passRef = useRef(null);
 	const passAgainRef = useRef(null);
 
+	const serverAPI = "http://localhost:3000/api/auth/register"
+
 	const register = () => {
 		console.log(
 			`Register with name: ${nameRef.current.value}, email: ${emailRef.current.value}, password: ${passRef.current.value}, passwordAgain: ${passAgainRef.current.value}`
 		);
+		
+		cancelCallback();
 	};
 
 	return (
@@ -21,7 +25,7 @@ function RegisterPanel({ cancelCallback }) {
 				inputRef={nameRef}
 				variant="filled"
 				label="Display name"
-				helperText="Enter your name"
+				helperText="Enter your display name"
 			/>
 			<TextFieldWrapper
 				required
