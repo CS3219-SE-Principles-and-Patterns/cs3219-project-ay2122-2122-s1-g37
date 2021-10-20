@@ -231,18 +231,19 @@ router.post("/register", registerValidation, async (req, res) => {
 		}
 });
 
-router.get("/login", async (req, res) => {
-	// depends, but may need to retrieve from db
-	const account = accounts.find(account => account.email === req.body.email);
-	if (account == null) {
-		console.log("email not found");
-		
-		// email not found.
-		return res.status(401).json({
-			message: "Account not registered."
-		});
-	}
+router.post("/login", async (req, res) => {	
 	try {
+		// depends, but may need to retrieve from db
+		const account = accounts.find(account => account.email === req.body.email);
+		if (account == null) {
+			console.log("email not found");
+			
+			// email not found.
+			return res.status(401).json({
+				message: "Account not registered. Please enter the correct email/password."
+			});
+		}
+		
 		if(await bcrypt.compare(req.body.password, account.password)) {
 			// can change duration here to test expiry
 			const accessToken = jwt.sign(account, process.env.ACCESS_SECRET, { expiresIn: '30 days' });
@@ -258,7 +259,7 @@ router.get("/login", async (req, res) => {
 			
 			// password does not match.
 			return res.status(401).json({
-				message: "Account not registered."
+				message: "Account not registered. Please enter the correct email/password."
 			});
 		}
 	} catch(err) {

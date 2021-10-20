@@ -1,23 +1,45 @@
 import { Typography } from "@mui/material";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+import axios from "axios";
 import Panel from "../Panel/Panel";
 import { ButtonContainerWrapper, ButtonWrapper, TextFieldWrapper } from "./LoginPanel.styled";
 
 function LoginPanel({ successCallback, toRegisterCallback }) {
 	const emailRef = useRef(null);
 	const passRef = useRef(null);
-
+	const [generalFlag, setGeneralFlag] = useState(false);
+	const [generalMsg, setGeneralMsg] = useState("");
+	
+	const loginAPI = "http://localhost:5000/api/auth/login";
+	
 	const login = () => {
 		console.log(
 			`login with email: ${emailRef.current.value}, password: ${passRef.current.value}`
 		);
-		successCallback();
+		
+		setGeneralFlag(false);
+		
+		axios.post(loginAPI, {email: emailRef.current.value, password: passRef.current.value})
+			.then((res) => {
+				console.log("logged in");
+				// wait for change in return values
+				console.log(res.data);
+				successCallback();
+			})
+			.catch((err) => {
+				if (err.response) {
+					setGeneralFlag(true);
+					setGeneralMsg(err.response.data.message);
+				}
+				
+			})
 	};
 
 	const linkElement = <a href="">Click here</a>;
 
 	return (
 		<Panel rowGap="1em">
+			{generalFlag && <p style={{ color: 'red' }}> {generalMsg} </p>}
 			<TextFieldWrapper
 				required
 				inputRef={emailRef}

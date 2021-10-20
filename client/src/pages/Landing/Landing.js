@@ -47,6 +47,7 @@ function Landing() {
 				<div className="landing-account-center">
 					{accPanelType === PANEL_TYPE_REGISTER && (
 						<RegisterPanel 
+							successCallback={() => {setIsLoggedIn(true); toLogin();}}
 							cancelCallback={toLogin} 
 						/>
 					)}
