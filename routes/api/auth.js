@@ -269,7 +269,7 @@ router.post("/login", async (req, res) => {
 	}
 });
 
-router.get("/authtoken", (req, res) => {
+router.post("/authtoken", (req, res) => {
 	const authHeader = req.headers["authorization"];
 	const token = authHeader && authHeader.split(" ")[1];
 	if (token == null) {

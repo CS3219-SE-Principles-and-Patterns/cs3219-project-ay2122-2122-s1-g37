@@ -39,7 +39,8 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 					console.log("registered");
 					// Need add user to list here
 					// Wait for marcus also
-					console.log(res.data)
+					console.log(res.data);
+					localStorage.setItem("token", res.data.token);
 					successCallback();
 				})
 				.catch((err) => {

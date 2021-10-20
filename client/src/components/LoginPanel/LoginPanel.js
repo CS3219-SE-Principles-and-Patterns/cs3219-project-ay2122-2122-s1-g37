@@ -24,6 +24,7 @@ function LoginPanel({ successCallback, toRegisterCallback }) {
 				console.log("logged in");
 				// wait for change in return values
 				console.log(res.data);
+				localStorage.setItem("token", res.data.token);
 				successCallback();
 			})
 			.catch((err) => {
