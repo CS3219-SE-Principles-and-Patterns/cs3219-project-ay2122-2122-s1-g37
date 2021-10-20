@@ -20,7 +20,7 @@ describe("cypress test", () => {
 	it("room expected interactions", () => {
 		cy.visit("http://localhost:3000");
 		cy.contains("Room").click();
-		cy.get('.sc-hKgJUU > .MuiFormControl-root > .MuiOutlinedInput-root > .MuiOutlinedInput-input').type("lol").should("have.value", "lol");
+		cy.get('[data-cy=chat-input]').type("lol")
 		cy.contains("Submit").click();
 		cy.contains("lol");
 	})
