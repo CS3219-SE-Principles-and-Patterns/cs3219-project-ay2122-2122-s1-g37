@@ -1,4 +1,4 @@
-import { Typography } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import React, { useRef } from "react";
 import Panel from "../Panel/Panel";
 import {
@@ -8,7 +8,7 @@ import {
 	TextFieldWrapper,
 } from "./LoginPanel.styled";
 
-function LoginPanel({ successCallback, toRegisterCallback }) {
+function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback }) {
 	const emailRef = useRef(null);
 	const passRef = useRef(null);
 
@@ -22,7 +22,7 @@ function LoginPanel({ successCallback, toRegisterCallback }) {
 		successCallback();
 	};
 
-	const linkElement = <a href="">Click here</a>;
+	const linkElement = <Button onClick={toRecoveryCallback}>Click here</Button>;
 
 	return (
 		<Panel rowGap="1em">

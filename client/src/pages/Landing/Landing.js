@@ -26,6 +26,10 @@ function Landing() {
 		setAccPanelType(PANEL_TYPE_LOGIN);
 	};
 
+	const toRecovery = () => {
+		setAccPanelType(PANEL_TYPE_RECOVERY);
+	};
+
 	return (
 		<LandingPageWrapper elevation={0}>
 			{isLoggedIn && (
@@ -52,6 +56,7 @@ function Landing() {
 						<LoginPanel
 							successCallback={() => setIsLoggedIn(true)}
 							toRegisterCallback={toRegister}
+							toRecoveryCallback={toRecovery}
 						/>
 					)}
 				</div>
