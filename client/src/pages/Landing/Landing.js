@@ -5,6 +5,7 @@ import JoinRoomPanel from "../../components/JoinRoomPanel/JoinRoomPanel";
 import LogoutButton from "../../components/LogoutButton/LogoutButton";
 import RegisterPanel from "../../components/RegisterPanel/RegisterPanel";
 import LoginPanel from "../../components/LoginPanel/LoginPanel";
+import RecoveryPanel from "../../components/RecoveryPanel/RecoveryPanel";
 
 const PANEL_TYPE_REGISTER = "register";
 const PANEL_TYPE_LOGIN = "login";
@@ -58,6 +59,9 @@ function Landing() {
 							toRegisterCallback={toRegister}
 							toRecoveryCallback={toRecovery}
 						/>
+					)}
+					{accPanelType === PANEL_TYPE_RECOVERY && (
+						<RecoveryPanel sendCallback={toLogin} />
 					)}
 				</div>
 			)}

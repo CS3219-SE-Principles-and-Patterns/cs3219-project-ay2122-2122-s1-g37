@@ -5,6 +5,7 @@ import {
 	ButtonContainerWrapper,
 	ButtonWrapper,
 	FormWrapper,
+	RecoveryButtonWrapper,
 	TextFieldWrapper,
 } from "./LoginPanel.styled";
 
@@ -21,8 +22,6 @@ function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback })
 
 		successCallback();
 	};
-
-	const linkElement = <Button onClick={toRecoveryCallback}>Click here</Button>;
 
 	return (
 		<Panel rowGap="1em">
@@ -46,7 +45,12 @@ function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback })
 					<ButtonWrapper type="submit">Login</ButtonWrapper>
 					<ButtonWrapper onClick={toRegisterCallback}>Register</ButtonWrapper>
 				</ButtonContainerWrapper>
-				<Typography variant="body1">Forget your password? {linkElement}</Typography>
+				<Typography variant="body1">
+					Forget your password?
+					<RecoveryButtonWrapper onClick={toRecoveryCallback}>
+						Click here
+					</RecoveryButtonWrapper>
+				</Typography>
 			</FormWrapper>
 		</Panel>
 	);

@@ -31,23 +31,11 @@ export const TextFieldWrapper = mStyled(TextField)({
 	},
 });
 
-export const ButtonContainerWrapper = styled.div`
-	width: 100%;
-
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	grid-column-gap: 1em;
-`;
-
 export const ButtonWrapper = mStyled(Button)({
-	width: "100%",
+	width: "30%",
 	background: theme.orange,
 	color: theme.darkGray,
 	":hover": {
 		background: theme.darkOrange,
 	},
-});
-
-export const RecoveryButtonWrapper = mStyled(Button)({
-	color: theme.orange,
 });
