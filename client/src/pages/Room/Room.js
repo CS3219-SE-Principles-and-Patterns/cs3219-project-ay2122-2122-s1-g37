@@ -63,7 +63,11 @@ function Room() {
 			process.env.NODE_ENV && process.env.NODE_ENV === "production"
 				? URL.DEPLOYED_SERVER_URL
 				: URL.LOCAL_SERVER_URL;
-		console.log(`Connecting to ${serverUrl}`);
+		console.log(
+			`Connecting to ${serverUrl}, current environment: ${
+				process.env.NODE_ENV ? process.env.NODE_ENV : "NONE"
+			}`
+		);
 		const newChatSocket = io(serverUrl + "/chat");
 		const newVideoSocket = io(serverUrl + "/video");
 		setChatSocket(newChatSocket);
