@@ -1,7 +1,12 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import Panel from "../Panel/Panel";
 import { ButtonContainerWrapper, ButtonWrapper, TextFieldWrapper } from "./RegisterPanel.styled";
+import { useUser } from "../Context/UserContext"
+
+const credentialsErrCode = 422;
+const emailExistsErrCode = 409;
+const passwordAgainError = "Please enter the same password.";
 
 function RegisterPanel({ successCallback, cancelCallback }) {
 	const nameRef = useRef(null);
@@ -16,8 +21,7 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 	const [passwordFlag, setPasswordFlag] = useState(false);
 	const [passwordError, setPasswordError] = useState("");
 	const [passwordAgainFlag, setPasswordAgainFlag] = useState(false);
-	
-	const registerAPI = "http://localhost:5000/api/auth/register";
+	const { userInfo, setUserInfo } = useUser();
 
 	const resetErrors = () => {
 		setGeneralFlag(false);
@@ -33,19 +37,29 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 		);
 		
 		resetErrors();
+		
 		if (passRef.current.value === passAgainRef.current.value) {
-			axios.post(registerAPI, {displayname: nameRef.current.value, email: emailRef.current.value, password: passRef.current.value})
+			axios.post("http://localhost:5000/api/auth/register", {displayname: nameRef.current.value, email: emailRef.current.value, password: passRef.current.value})
 				.then((res) => {
 					console.log("registered");
-					// Need add user to list here
-					// Wait for marcus also
-					console.log(res.data);
+					
+					// Add to context
+					const newUserInfo = {
+						userId: res.data.userId,
+						displayname: res.data.displayname,
+						email: res.data.email,
+						token: res.data.token
+					}
+					setUserInfo(newUserInfo);
+					console.log("added user to context");
+					
+					// Add token to browser
 					localStorage.setItem("token", res.data.token);
 					successCallback();
 				})
 				.catch((err) => {
 					if (err.response) {
-						if (err.response.status == 422) {
+						if (err.response.status == credentialsErrCode) {
 							const errData = err.response.data.errors;
 							console.log(errData);
 							let passErrMsgSet = false;
@@ -60,11 +74,10 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 									// take only first password error message
 									passErrMsgSet = true;
 									setPasswordFlag(true);
-									console.log("setting msg: " + errData[i].msg);
 									setPasswordError(errData[i].msg);
 								}
 							}
-						} else if (err.response.status == 409){
+						} else if (err.response.status == emailExistsErrCode){
 							setEmailFlag(true);
 							setEmailError(err.response.data.message);
 						} else {
@@ -78,97 +91,43 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 		}
 	};
 	
-	let displayNameBox;
-	if (displayNameFlag) {
-		displayNameBox = 
-			<TextFieldWrapper
-					error
-					inputRef={nameRef}
-					variant="filled"
-					label="Display name"
-					helperText={displayNameError}
-			/>;
-	} else {
-		displayNameBox = 
-			<TextFieldWrapper
-				required
-				inputRef={nameRef}
-				variant="filled"
-				label="Display name"
-			/>
-	}
-	
-	let emailBox;
-	if (emailFlag) {
-		emailBox = 
-			<TextFieldWrapper
-					error
-					inputRef={emailRef}
-					variant="filled"
-					label="Email address"
-					helperText={emailError}
-			/>
-	} else {
-		emailBox =
-			<TextFieldWrapper
-					required
-					inputRef={emailRef}
-					variant="filled"
-					label="Email address"
-			/>
-	}
-	
-	let passwordBox;
-	if (passwordFlag) {
-		passwordBox = 
-			<TextFieldWrapper
-					error
-					inputRef={passRef}
-					variant="filled"
-					label="Password"
-					type="password"
-					helperText={passwordError}
-			/>
-	} else {
-		passwordBox = 
-			<TextFieldWrapper
-					required
-					inputRef={passRef}
-					variant="filled"
-					label="Password"
-					type="password"
-			/>
-	}
-	
-	let passwordAgainBox;
-	if (passwordAgainFlag) {
-		passwordAgainBox = 
-			<TextFieldWrapper
-				error
-				inputRef={passAgainRef}
-				variant="filled"
-				label="Re-enter password"
-				type="password"
-				helperText="Please enter the same password."
-			/>
-	} else {
-		passwordAgainBox = 
-			<TextFieldWrapper
-				required
-				inputRef={passAgainRef}
-				variant="filled"
-				label="Re-enter password"
-				type="password"
-			/>
-	}
-	
 	return (
 		<Panel rowGap="1em">
 			{generalFlag && <p style={{ color: 'red' }}>Error when registering for account. Please ask the PeerWatch team for assistance.</p>}
-			{displayNameBox}
-			{emailBox}
-			{passwordBox}
-			{passwordAgainBox}
+			<TextFieldWrapper
+					required
+					error={displayNameFlag}
+					inputRef={nameRef}
+					variant="filled"
+					label="Display name"
+					helperText={displayNameFlag ? displayNameError : ""}
+			/>
+			<TextFieldWrapper
+					required
+					error={emailFlag}
+					inputRef={emailRef}
+					variant="filled"
+					label="Email address"
+					helperText={emailFlag ? emailError : ""}
+			/>
+			<TextFieldWrapper
+					required
+					error={passwordFlag}
+					inputRef={passRef}
+					variant="filled"
+					label="Password"
+					type="password"
+					helperText={passwordFlag ? passwordError : ""}
+			/>
+			<TextFieldWrapper
+				required
+				error={passwordAgainFlag}
+				inputRef={passAgainRef}
+				variant="filled"
+				label="Re-enter password"
+				type="password"
+				helperText={passwordAgainFlag ? passwordAgainError : ""}
+			/>
 			<ButtonContainerWrapper>
 				<ButtonWrapper onClick={register}>Register</ButtonWrapper>
 				<ButtonWrapper onClick={cancelCallback}>Cancel</ButtonWrapper>

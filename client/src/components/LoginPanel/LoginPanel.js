@@ -1,16 +1,16 @@
 import { Typography } from "@mui/material";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import Panel from "../Panel/Panel";
 import { ButtonContainerWrapper, ButtonWrapper, TextFieldWrapper } from "./LoginPanel.styled";
+import { useUser } from "../Context/UserContext"
 
 function LoginPanel({ successCallback, toRegisterCallback }) {
 	const emailRef = useRef(null);
 	const passRef = useRef(null);
 	const [generalFlag, setGeneralFlag] = useState(false);
 	const [generalMsg, setGeneralMsg] = useState("");
-	
-	const loginAPI = "http://localhost:5000/api/auth/login";
+	const { userInfo, setUserInfo } = useUser();
 	
 	const login = () => {
 		console.log(
@@ -19,11 +19,21 @@ function LoginPanel({ successCallback, toRegisterCallback }) {
 		
 		setGeneralFlag(false);
 		
-		axios.post(loginAPI, {email: emailRef.current.value, password: passRef.current.value})
+		axios.post("http://localhost:5000/api/auth/login", {email: emailRef.current.value, password: passRef.current.value})
 			.then((res) => {
 				console.log("logged in");
-				// wait for change in return values
-				console.log(res.data);
+				
+				// Add to context
+				const newUserInfo = {
+					userId: res.data.userId,
+					displayname: res.data.displayname,
+					email: res.data.email,
+					token: res.data.token
+				}
+				setUserInfo(newUserInfo);
+				console.log("added user to context");
+				
+				// Add token to browser
 				localStorage.setItem("token", res.data.token);
 				successCallback();
 			})

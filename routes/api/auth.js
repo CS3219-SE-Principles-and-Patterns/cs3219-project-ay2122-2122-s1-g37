@@ -15,8 +15,8 @@ const accounts = [];
 const resets = new Map();
 
 var registerValidation = [
-	check("email", "Email must be of valid email format").isEmail(),
-	check("displayname").isLength({ min: 1 }).withMessage("Display Name must be at least 1 character"),
+	check("email", "Email must be of valid email format.").isEmail(),
+	check("displayname").isLength({ min: 1 }).withMessage("Display Name must be at least 1 character."),
 	check("password").isLength({ min: 8 }).withMessage("Password must be at least 8 characters.").matches("[0-9]").withMessage("Password must contain numbers.").matches("[A-z]").withMessage("Password must contain letters.")
 ];
 
@@ -221,8 +221,11 @@ router.post("/register", registerValidation, async (req, res) => {
 			// Successful account creation
 			return res.status(201).json({
 				message: "Account registered.",
+				// marcus halp.
+				userId: "Sorry idk wad id",
+				displayname: account.displayname,
 				token: accessToken,
-				displayname: account.displayname
+				email: account.email
 			});
 		} catch(err) {
 			console.log("something went wrong in register");
@@ -251,8 +254,11 @@ router.post("/login", async (req, res) => {
 			console.log("logged in");
 			return res.status(200).json({
 				message: "Logged in successfully",
+				// marcus halp.
+				userId: "Sorry idk wad id",
+				displayname: account.displayname,
 				token: accessToken,
-				displayname: account.displayname
+				email: account.email
 			});
 		} else {
 			console.log("password dont match");
@@ -291,7 +297,12 @@ router.post("/authtoken", (req, res) => {
 		
 		console.log("account authenticated");
 		return res.status(200).json({
-			message: "Account authenticated."
+			message: "Account authenticated.",
+			// marcus halp.
+			userId: "Sorry idk wad id",
+			displayname: account.displayname,
+			token: token,
+			email: account.email
 		});
 	});
 });
