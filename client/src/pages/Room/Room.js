@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams } from "react-router";
 import Chatbox from "../../components/ChatBox/Chatbox";
 import RoomSettings from "../../components/RoomSettings/RoomSettings";
