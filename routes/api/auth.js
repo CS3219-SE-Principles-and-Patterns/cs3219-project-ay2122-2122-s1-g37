@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const { check, validationResult } = require("express-validator");
+const db = require("../../services/db");
 require("dotenv").config();
 
 router.use(bodyParser.urlencoded({ extended: true }));
@@ -16,7 +17,7 @@ const resets = new Map();
 
 var registerValidation = [
 	check("email", "Email must be of valid email format.").isEmail(),
-	check("displayname").isLength({ min: 1 }).withMessage("Display Name must be at least 1 character."),
+	check("displayName").isLength({ min: 1 }).withMessage("Display Name must be at least 1 character."),
 	check("password").isLength({ min: 8 }).withMessage("Password must be at least 8 characters.").matches("[0-9]").withMessage("Password must contain numbers.").matches("[A-z]").withMessage("Password must contain letters.")
 ];
 
@@ -193,40 +194,44 @@ router.post("/register", registerValidation, async (req, res) => {
 			const email = req.body.email;
 			console.log("password received: " + req.body.password);
 			const password = await bcrypt.hash(req.body.password, 10);
-			
+
 			// check if email already exists
-			const duplicate = accounts.find(account => account.email === email);
-			if (duplicate !== null) {
-				console.log("email already exists");
-				
-				// 409 might not be the best option here
-				return res.status(409).json({
-					message: "Email already exists."
-				})
-			}
-			
-			// Create and add account
-			const account = {
-				email: email,
-				displayname: req.body.displayname,
-				password: password,
-				isGoogle: false
-			}
-			// Need update DB also
-			accounts.push(account)
-			
-			const accessToken = jwt.sign(account, process.env.ACCESS_SECRET, { expiresIn: '30 days' });
-			
-			console.log("Account created");
-			// Successful account creation
-			return res.status(201).json({
-				message: "Account registered.",
-				// marcus halp.
-				userId: "Sorry idk wad id",
-				displayname: account.displayname,
-				token: accessToken,
-				email: account.email
+            const selectUserSQl = "SELECT * FROM users WHERE email = ?";
+            db.query(selectUserSQl, email, (selectUserErr, selectUserRes) => {
+				console.log(selectUserRes);
+                if (selectUserRes !== null && selectUserRes.length !== 0) {
+                    console.log("email already exists");
+                    return res.status(409).json({
+                        message: "Email already exists."
+                    })
+                }
+
+                // Create and add account
+                let newUser = {
+                    "email": email,
+                    "displayName": req.body.displayName,
+                    "password": password,
+                    "isGoogle": false
+                };
+                const insertUserSQL = "INSERT INTO users SET ?";
+                db.query(insertUserSQL, newUser, (insertUserErr, insertUserRes) => {
+                    if (insertUserErr) {
+                        return res.status(500).send(insertUserErr);
+                    }
+                    newUser.userId = insertUserRes.insertId;
+
+                    const accessToken = jwt.sign(newUser, process.env.ACCESS_SECRET, { expiresIn: '30 days' });
+                    console.log("Account created");
+                    res.status(201).json({
+                        message: "Account registered.",
+                        token: accessToken,
+                        userId: newUser.userId,
+                        displayName: newUser.displayName,
+                        email: newUser.email
+                    });
+                });
 			});
+
 		} catch(err) {
 			console.log("something went wrong in register");
 			console.log(err.message);
@@ -234,46 +239,52 @@ router.post("/register", registerValidation, async (req, res) => {
 		}
 });
 
-router.post("/login", async (req, res) => {	
-	try {
-		// depends, but may need to retrieve from db
-		const account = accounts.find(account => account.email === req.body.email);
-		if (account === null) {
-			console.log("email not found");
-			
-			// email not found.
-			return res.status(401).json({
-				message: "Account not registered. Please enter the correct email/password."
-			});
-		}
-		
-		console.log("password received: " + req.body.password);
-		if(await bcrypt.compare(req.body.password, account.password)) {
-			// can change duration here to test expiry
-			const accessToken = jwt.sign(account, process.env.ACCESS_SECRET, { expiresIn: '30 days' });
-			
-			console.log("logged in");
-			return res.status(200).json({
-				message: "Logged in successfully",
-				// marcus halp.
-				userId: "Sorry idk wad id",
-				displayname: account.displayname,
-				token: accessToken,
-				email: account.email
-			});
-		} else {
-			console.log("password dont match");
-			
-			// password does not match.
-			return res.status(401).json({
-				message: "Account not registered. Please enter the correct email/password."
-			});
-		}
-	} catch(err) {
-		console.log("something went wrong in login");
-		console.log(err.message);
-		return res.status(500).send(err.message);
-	}
+router.post("/login", async (req, res) => {
+    // check if email already exists
+    const selectUserSQl = "SELECT * FROM users WHERE email = ?";
+    const email = req.body.email;
+    db.query(selectUserSQl, email, (selectUserErr, selectUserRes) => {
+        if (selectUserRes === null || selectUserRes.length === 0) {
+            console.log("email not found");
+            return res.status(401).json({
+                message: "Account not registered."
+            })
+        }
+        try {
+            const account = {
+                "email": selectUserRes[0].email,
+                "displayName": selectUserRes[0].displayName,
+                "password": selectUserRes[0].password,
+                "isGoogle": selectUserRes[0].isGoogle
+            };
+            bcrypt.compare(req.body.password, account.password, (err, comparison) => {
+                // can change duration here to test expiry
+                if (comparison) {
+                    const accessToken = jwt.sign(account, process.env.ACCESS_SECRET, { expiresIn: '30 days' });
+
+                    console.log("logged in");
+                    return res.status(200).json({
+                        message: "Logged in successfully",
+                        token: accessToken,
+                        userId: account.userId,
+                        displayName: account.displayName,
+                        email: account.email
+                    });
+                } else {
+                    console.log("password dont match");
+
+                    // password does not match.
+                    return res.status(401).json({
+                        message: "Wrong password."
+                    });
+                }
+            });
+        } catch(err) {
+            console.log("something went wrong in login");
+			console.log(err.message);
+            return res.status(500).send(err.message);
+        }
+    });
 });
 
 router.post("/authtoken", (req, res) => {
@@ -299,9 +310,8 @@ router.post("/authtoken", (req, res) => {
 		console.log("account authenticated");
 		return res.status(200).json({
 			message: "Account authenticated.",
-			// marcus halp.
-			userId: "Sorry idk wad id",
-			displayname: account.displayname,
+			userId: account.userId,
+			displayName: account.displayName,
 			token: token,
 			email: account.email
 		});

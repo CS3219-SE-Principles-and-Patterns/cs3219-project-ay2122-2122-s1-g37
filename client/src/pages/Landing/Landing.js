@@ -52,7 +52,7 @@ function Landing() {
 					// Add to context
 					const newUserInfo = {
 						userId: res.data.userId,
-						displayname: res.data.displayname,
+						displayName: res.data.displayName,
 						email: res.data.email,
 						token: res.data.token
 					}

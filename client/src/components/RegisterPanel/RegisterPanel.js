@@ -39,14 +39,14 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 		resetErrors();
 		
 		if (passRef.current.value === passAgainRef.current.value) {
-			axios.post("http://localhost:5000/api/auth/register", {displayname: nameRef.current.value, email: emailRef.current.value, password: passRef.current.value})
+			axios.post("http://localhost:5000/api/auth/register", {displayName: nameRef.current.value, email: emailRef.current.value, password: passRef.current.value})
 				.then((res) => {
 					console.log("registered");
 					
 					// Add to context
 					const newUserInfo = {
 						userId: res.data.userId,
-						displayname: res.data.displayname,
+						displayName: res.data.displayName,
 						email: res.data.email,
 						token: res.data.token
 					}
@@ -64,7 +64,7 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 							console.log(errData);
 							let passErrMsgSet = false;
 							for (let i = 0; i < errData.length; i++) {
-								if (errData[i].param === "displayname") {
+								if (errData[i].param === "displayName") {
 									setDisplayNameFlag(true);
 									setDisplayNameError(errData[i].msg);
 								} else if (errData[i].param === "email") {
