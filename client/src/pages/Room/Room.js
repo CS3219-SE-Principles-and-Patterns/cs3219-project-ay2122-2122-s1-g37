@@ -9,13 +9,7 @@ import RoomPageWrapper from "./Room.styled";
 import { io } from "socket.io-client";
 import URL from "../../util/url";
 import { CircularProgress, Typography } from "@mui/material";
-
-const initialPlayerState = {
-	url: "",
-	playing: true,
-	syncTime: 0,
-	syncType: "seconds",
-};
+import axios from "axios";
 
 const initialSettings = {
 	capacity: 15,
@@ -39,7 +33,6 @@ const blankUser = {
 
 function Room() {
 	const { id } = useParams();
-	const [playerState, setPlayerState] = useState(initialPlayerState);
 	const [user, setUser] = useState(blankUser);
 	const [users, setUsers] = useState([]);
 	const [settings, setSettings] = useState(initialSettings);
@@ -48,8 +41,10 @@ function Room() {
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
 
+	const [roomInfo, setRoomInfo] = useState({});
+
 	const linkCallback = (url) => {
-		setPlayerState({ ...playerState, url });
+		setRoomInfo({ ...roomInfo, url });
 	};
 
 	const saveCallback = () => {
@@ -59,25 +54,46 @@ function Room() {
 
 	// Initialize sockets
 	useEffect(() => {
-		const serverUrl =
-			process.env.NODE_ENV && process.env.NODE_ENV === "production"
-				? URL.DEPLOYED_SERVER_URL
-				: URL.LOCAL_SERVER_URL;
-		console.log(
-			`Connecting to ${serverUrl}, current environment: ${
-				process.env.NODE_ENV ? process.env.NODE_ENV : "NONE"
-			}`
-		);
-		const newChatSocket = io(serverUrl + "/chat");
-		const newVideoSocket = io(serverUrl + "/video");
-		setChatSocket(newChatSocket);
-		setVideoSocket(newVideoSocket);
+		const PLACEHOLDER_USER_ID = 10;
 
-		return () => {
-			newChatSocket.disconnect();
-			newVideoSocket.disconnect();
-		};
-	}, []);
+		console.log(id);
+
+		axios
+			.post("/api/rooms/join", { userId: PLACEHOLDER_USER_ID, roomId: id })
+			.then((res) => {
+				// Retrieve room info
+				axios.get(`/api/rooms/${id}`).then((roomRes) => {
+					console.log("Retrieved room data");
+
+					let newRoomInfo = roomRes.data.room;
+					if (!newRoomInfo.url || newRoomInfo.url.length === 0) {
+						newRoomInfo.url = URL.FALLBACK_VIDEO;
+					}
+
+					setRoomInfo(roomRes.data.room);
+				});
+
+				// Setup sockets
+				const serverUrl =
+					process.env.NODE_ENV && process.env.NODE_ENV === "production"
+						? URL.DEPLOYED_SERVER_URL
+						: URL.LOCAL_SERVER_URL;
+				const newChatSocket = io(serverUrl + "/chat");
+				const newVideoSocket = io(serverUrl + "/video", {
+					query: { userId: PLACEHOLDER_USER_ID },
+				});
+				setChatSocket(newChatSocket);
+				setVideoSocket(newVideoSocket);
+
+				return () => {
+					newChatSocket.disconnect();
+					newVideoSocket.disconnect();
+				};
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}, [id]);
 
 	const updateUserList = useCallback(
 		(newUserList) => {
@@ -116,13 +132,14 @@ function Room() {
 				)}
 				<div className="room-res-wrapper">
 					<VideoPlayer
-						{...playerState}
 						users={users}
 						user={user}
 						socket={videoSocket}
 						roomId={id}
 						isWaiting={isWaiting}
 						setIsWaiting={setIsWaiting}
+						roomInfo={roomInfo}
+						setRoomInfo={setRoomInfo}
 					/>
 				</div>
 			</div>

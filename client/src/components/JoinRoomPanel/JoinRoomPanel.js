@@ -4,6 +4,7 @@ import { useHistory } from "react-router";
 import Panel from "../Panel/Panel";
 import { ButtonWrapper, TextFieldWrapper } from "./JoinRoomPanel.styled";
 import { validate as uuidValidate } from "uuid";
+import axios from "axios";
 
 function JoinRoomPanel() {
 	const inputRef = useRef(null);
@@ -14,11 +15,21 @@ function JoinRoomPanel() {
 		if (!uuidValidate(id)) {
 			console.log(`Invalid room id format... (Given id: ${id})`);
 		} else {
-			console.log(`Joining a room with an id of ${id}`);
-
-			// To-do: Add user to the room in DB
-
-			history.push(`/room/${id}`);
+			// Reject if the room is not full and the user is not already in
+			axios
+				.get(`/api/rooms/${id}/count`)
+				.then((res) => {
+					const { capacity, count } = res.data;
+					if (count >= capacity) {
+						// To-do: Display an error text under the textfield
+						console.log(`Room ${id} is already full (${count} / ${capacity})`);
+					} else {
+						history.push(`/room/${id}`);
+					}
+				})
+				.catch((err) => {
+					console.log(err);
+				});
 		}
 	};
 

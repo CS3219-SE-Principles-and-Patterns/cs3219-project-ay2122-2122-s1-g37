@@ -8,6 +8,23 @@ const roomSocketMap = new Map();
 const bufferReadysMap = new Map();
 // Store rooms that are being held
 const roomHoldersMap = new Map();
+// Mapping socket ID to user ID
+const socketUserMap = new Map();
+
+const disconnectUser = (socketId, userId, roomId) => {
+	const sql = "DELETE FROM users_in_rooms WHERE roomId = ? AND userId = ?";
+	db.query(sql, [roomId, userId], (derr, dres) => {
+		if (derr) {
+			return res.status(500).json({ message: derr.message });
+		}
+		console.log(dres);
+		if (dres.affectedRows == 0) {
+			console.log("Room or user does not exist");
+		}
+		socketUserMap.delete(socketId);
+		console.log("User disconnected...");
+	});
+};
 
 const deleteRoom = (roomId) => {
 	const sql = "DELETE FROM rooms WHERE id = ?";
@@ -41,6 +58,8 @@ module.exports = (io) => {
 			console.log(`${socket.id} has joined the video room ${roomId}`);
 			socket.join(roomId);
 
+			socketUserMap.set(socket.id, socket.handshake.query.userId);
+
 			// Update mapping
 			socketRoomMap.set(socket.id, roomId);
 			if (roomSocketMap.has(roomId)) {
@@ -55,6 +74,9 @@ module.exports = (io) => {
 		// 2. Cleanup after a user disconnects
 		socket.on("disconnect", () => {
 			const roomId = socketRoomMap.get(socket.id);
+
+			disconnectUser(socket.id, socketUserMap.get(socket.id), roomId);
+			console.log(socketUserMap);
 
 			// Remove user from roomSocket map
 			if (socketRoomMap.has(socket.id) && roomSocketMap.has(socketRoomMap.get(socket.id))) {

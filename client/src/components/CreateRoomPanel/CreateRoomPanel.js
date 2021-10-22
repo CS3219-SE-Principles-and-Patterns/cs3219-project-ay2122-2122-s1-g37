@@ -10,21 +10,21 @@ function CreateRoomPanel() {
 	const history = useHistory();
 
 	const create = () => {
-		const newRoom = {
-			roomId: uuidv4(),
-			hostId: 5, // To-do: replace with actual user's id, obtained from logging in
-			capacity: 15, // Leaving blank does not work when there's supposed to be a default value
-		};
-		console.log(`Creating a room with an id of ${newRoom.roomId}`);
+		const PLACEHOLDER_USER_ID = 10;
+		const roomId = uuidv4();
 
-		// Create a room entry in DB
+		const newRoom = {
+			roomId,
+			hostId: PLACEHOLDER_USER_ID, // To-do: replace with actual user's id, obtained from logging in
+		};
+
 		axios
 			.post("/api/rooms/create", newRoom)
-			.then((res) => {
+			.then((createRes) => {
 				history.push(`/room/${newRoom.roomId}`);
 			})
-			.catch((err) => {
-				console.log(err);
+			.catch((createErr) => {
+				console.log(createErr);
 			});
 	};
 

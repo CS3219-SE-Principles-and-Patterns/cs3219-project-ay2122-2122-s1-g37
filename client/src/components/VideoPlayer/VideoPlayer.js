@@ -2,7 +2,6 @@ import axios from "axios";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player/youtube";
 
-const fallbackURL = "https://www.youtube.com/watch?v=Ski_KEgOUP4";
 const UNAVALIABLE = -1;
 const THRESHOLD_SYNC = 1;
 const DELAY_DEBOUNCED_PLAYING = 250;
@@ -43,8 +42,16 @@ const throttleSetState = (setState, delay) => {
 	return throttledSetState;
 };
 
-function VideoPlayer({ socket, roomId, users, user, url, isWaiting, setIsWaiting }) {
-	const [roomInfo, setRoomInfo] = useState({});
+function VideoPlayer({
+	socket,
+	roomId,
+	users,
+	user,
+	isWaiting,
+	setIsWaiting,
+	roomInfo,
+	setRoomInfo,
+}) {
 	const [isPlaying, setIsPlaying] = useState(true);
 	const [buffererId, setBuffererId] = useState(UNAVALIABLE);
 	const [isInitialSync, setIsInitialSync] = useState(true);
@@ -76,26 +83,6 @@ function VideoPlayer({ socket, roomId, users, user, url, isWaiting, setIsWaiting
 	const initialize = useCallback(() => {
 		socket.emit("join-room", roomId, () => {
 			console.log(`${socket.id} has joined the video room`);
-
-			axios
-				.get(`/api/rooms/${roomId}`)
-				.then((res) => {
-					let newRoomInfo = res.data.room;
-					console.log(`Retrieving room info...`);
-					console.log(newRoomInfo);
-
-					if (!newRoomInfo.url || newRoomInfo.url.length === 0) {
-						newRoomInfo = { ...newRoomInfo, url: fallbackURL };
-						console.log(
-							`${socket.id} cannot found URL for the room ${roomId}, using fallback...`
-						);
-					}
-
-					setRoomInfo(newRoomInfo);
-				})
-				.catch((err) => {
-					console.log(err);
-				});
 		});
 	}, [socket, roomId]);
 
@@ -127,24 +114,18 @@ function VideoPlayer({ socket, roomId, users, user, url, isWaiting, setIsWaiting
 		[setRoomInfo]
 	);
 	useEffect(() => {
-		if (socket && url) {
+		if (socket && roomInfo.url) {
 			axios
-				.put("/api/rooms/url", { roomId, url })
+				.put("/api/rooms/url", { roomId, url: roomInfo.url })
 				.then((res) => {
 					setIsInitialSync(true);
-					setRoomInfo((prevInfo) => {
-						return { ...prevInfo, url };
-					});
-
-					if (url !== fallbackURL) {
-						socket.emit("SEND_URL", roomId, url);
-					}
+					socket.emit("SEND_URL", roomId, roomInfo.url);
 				})
 				.catch((err) => {
 					console.log(err);
 				});
 		}
-	}, [socket, roomId, url]);
+	}, [socket, roomId, roomInfo.url, setRoomInfo]);
 
 	// Synchronize user's timing
 	const receiveTiming = useCallback(
