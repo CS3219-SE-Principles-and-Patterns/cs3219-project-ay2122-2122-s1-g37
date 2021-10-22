@@ -7,6 +7,9 @@ import { useUser } from "../Context/UserContext"
 const credentialsErrCode = 422;
 const emailExistsErrCode = 409;
 const passwordAgainError = "Please enter the same password.";
+const registerAPI = process.env.NODE_ENV && process.env.NODE_ENV === "production"
+	? "http://54.179.111.98:5000/api/auth/register"
+	: "http://localhost:5000/api/auth/register";
 
 function RegisterPanel({ successCallback, cancelCallback }) {
 	const nameRef = useRef(null);
@@ -39,7 +42,7 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 		resetErrors();
 		
 		if (passRef.current.value === passAgainRef.current.value) {
-			axios.post("http://localhost:5000/api/auth/register", {displayName: nameRef.current.value, email: emailRef.current.value, password: passRef.current.value})
+			axios.post(registerAPI, {displayName: nameRef.current.value, email: emailRef.current.value, password: passRef.current.value})
 				.then((res) => {
 					console.log("registered");
 					

@@ -5,6 +5,10 @@ import Panel from "../Panel/Panel";
 import { ButtonContainerWrapper, ButtonWrapper, TextFieldWrapper } from "./LoginPanel.styled";
 import { useUser } from "../Context/UserContext"
 
+const loginAPI = process.env.NODE_ENV && process.env.NODE_ENV === "production"
+	? "http://54.179.111.98:5000/api/auth/login"
+	: "http://localhost:5000/api/auth/login";
+
 function LoginPanel({ successCallback, toRegisterCallback }) {
 	const emailRef = useRef(null);
 	const passRef = useRef(null);
@@ -19,7 +23,7 @@ function LoginPanel({ successCallback, toRegisterCallback }) {
 		
 		setGeneralFlag(false);
 		
-		axios.post("http://localhost:5000/api/auth/login", {email: emailRef.current.value, password: passRef.current.value})
+		axios.post(loginAPI, {email: emailRef.current.value, password: passRef.current.value})
 			.then((res) => {
 				console.log("logged in");
 				

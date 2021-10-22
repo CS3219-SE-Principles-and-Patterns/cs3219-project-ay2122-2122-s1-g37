@@ -48,6 +48,7 @@ router.post("/recover", async (req, res) => {
 	const resetToken = jwt.sign({email: email}, password, { expiresIn: '15m' });
 	console.log(`signed reset token: ${resetToken}`);
 	
+	// Need change the link later.
 	const link = "http://localhost:3000/resetapi/" + randomID + "/" + resetToken;
 	console.log(`link: ${link}`);
 	
