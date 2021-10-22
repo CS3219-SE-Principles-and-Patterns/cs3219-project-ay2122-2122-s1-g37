@@ -199,7 +199,7 @@ router.post("/register", registerValidation, async (req, res) => {
             const selectUserSQl = "SELECT * FROM users WHERE email = ?";
             db.query(selectUserSQl, email, (selectUserErr, selectUserRes) => {
 				console.log(selectUserRes);
-                if (selectUserRes !== null && selectUserRes.length !== 0) {
+                if (selectUserRes != null && selectUserRes.length != 0) {
                     console.log("email already exists");
                     return res.status(409).json({
                         message: "Email already exists."
@@ -244,7 +244,7 @@ router.post("/login", async (req, res) => {
     const selectUserSQl = "SELECT * FROM users WHERE email = ?";
     const email = req.body.email;
     db.query(selectUserSQl, email, (selectUserErr, selectUserRes) => {
-        if (selectUserRes === null || selectUserRes.length === 0) {
+        if (selectUserRes == null || selectUserRes.length == 0) {
             console.log("email not found");
             return res.status(401).json({
                 message: "Account not registered."
@@ -290,7 +290,7 @@ router.post("/login", async (req, res) => {
 router.post("/authtoken", (req, res) => {
 	const authHeader = req.headers["authorization"];
 	const token = authHeader && authHeader.split(" ")[1];
-	if (token === null) {
+	if (token == null) {
 		console.log("no token provided");
 		
 		return res.status(401).json({
