@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from "../../components/Context/UserContext"
 import LandingPageWrapper from "./Landing.styled";
 import CreateRoomPanel from "../../components/CreateRoomPanel/CreateRoomPanel";
@@ -15,7 +15,7 @@ const PANEL_TYPE_RECOVERY = "recovery";
 function Landing() {
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [accPanelType, setAccPanelType] = useState(PANEL_TYPE_LOGIN);
-	const { userInfo, setUserInfo } = useUser();
+	const { setUserInfo } = useUser();
 	
 	const logOut = () => {
 		// Show login page.
@@ -40,7 +40,6 @@ function Landing() {
 	const authAPI = "http://localhost:5000/api/auth/authtoken";
 
 	useEffect(() => {
-		console.log(userInfo);
 		const userToken = localStorage.getItem("token");
 		
 		if (userToken == null) {
@@ -71,7 +70,7 @@ function Landing() {
 					}
 				})
 		}
-	}, []);
+	}, [setUserInfo]);
 
 	return (
 		<LandingPageWrapper elevation={0}>

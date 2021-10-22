@@ -1,4 +1,4 @@
-import React, { useRef, useState, useContext, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import axios from "axios";
 import Panel from "../Panel/Panel";
 import { ButtonContainerWrapper, ButtonWrapper, TextFieldWrapper } from "./RegisterPanel.styled";
@@ -21,7 +21,7 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 	const [passwordFlag, setPasswordFlag] = useState(false);
 	const [passwordError, setPasswordError] = useState("");
 	const [passwordAgainFlag, setPasswordAgainFlag] = useState(false);
-	const { userInfo, setUserInfo } = useUser();
+	const { setUserInfo } = useUser();
 
 	const resetErrors = () => {
 		setGeneralFlag(false);
@@ -59,7 +59,7 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 				})
 				.catch((err) => {
 					if (err.response) {
-						if (err.response.status == credentialsErrCode) {
+						if (err.response.status === credentialsErrCode) {
 							const errData = err.response.data.errors;
 							console.log(errData);
 							let passErrMsgSet = false;
@@ -77,7 +77,7 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 									setPasswordError(errData[i].msg);
 								}
 							}
-						} else if (err.response.status == emailExistsErrCode){
+						} else if (err.response.status === emailExistsErrCode){
 							setEmailFlag(true);
 							setEmailError(err.response.data.message);
 						} else {

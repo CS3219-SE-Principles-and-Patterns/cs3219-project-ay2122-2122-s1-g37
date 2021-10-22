@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import React, { useRef, useState, useContext, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import axios from "axios";
 import Panel from "../Panel/Panel";
 import { ButtonContainerWrapper, ButtonWrapper, TextFieldWrapper } from "./LoginPanel.styled";
@@ -10,7 +10,7 @@ function LoginPanel({ successCallback, toRegisterCallback }) {
 	const passRef = useRef(null);
 	const [generalFlag, setGeneralFlag] = useState(false);
 	const [generalMsg, setGeneralMsg] = useState("");
-	const { userInfo, setUserInfo } = useUser();
+	const { setUserInfo } = useUser();
 	
 	const login = () => {
 		console.log(
