@@ -13,6 +13,7 @@ router.use(bodyParser.json());
 
 const accounts = [];
 
+// Might wanna store this in db?
 const resets = new Map();
 
 var registerValidation = [
@@ -192,13 +193,11 @@ router.post("/register", registerValidation, async (req, res) => {
 			}
 			
 			const email = req.body.email;
-			console.log("password received: " + req.body.password);
 			const password = await bcrypt.hash(req.body.password, 10);
 
 			// check if email already exists
             const selectUserSQl = "SELECT * FROM users WHERE email = ?";
             db.query(selectUserSQl, email, (selectUserErr, selectUserRes) => {
-				console.log(selectUserRes);
                 if (selectUserRes != null && selectUserRes.length != 0) {
                     console.log("email already exists");
                     return res.status(409).json({
@@ -247,7 +246,7 @@ router.post("/login", async (req, res) => {
         if (selectUserRes == null || selectUserRes.length == 0) {
             console.log("email not found");
             return res.status(401).json({
-                message: "Account not registered."
+                message: "Account not registered. Please enter the correct email/password."
             })
         }
         try {
@@ -275,7 +274,7 @@ router.post("/login", async (req, res) => {
 
                     // password does not match.
                     return res.status(401).json({
-                        message: "Wrong password."
+                        message: "Account not registered. Please enter the correct email/password."
                     });
                 }
             });
