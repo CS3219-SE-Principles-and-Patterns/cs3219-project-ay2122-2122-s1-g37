@@ -27,7 +27,7 @@ var resetValidation = [
 
 router.post("/recover", async (req, res) => {
 	const account = accounts.find(account => account.email === req.body.email);
-	if (account == null) {
+	if (account === null) {
 		// email not found.
 		console.log("email not found");
 		
@@ -98,7 +98,7 @@ router.put("/reset/:_id", resetValidation, async (req, res) => {
 		try {
 			// change the errors when want to test what went wrong
 			const randomID = req.params._id;
-			if (randomID == null) {
+			if (randomID === null) {
 				// no random id
 				console.log("randomID not given");
 				
@@ -108,7 +108,7 @@ router.put("/reset/:_id", resetValidation, async (req, res) => {
 			}
 			
 			var email = resets.get(randomID);
-			if (typeof email == undefined) {
+			if (typeof email === undefined) {
 				// somehow email not mapped or invalid
 				console.log("email somehow not mapped");
 				
@@ -119,7 +119,7 @@ router.put("/reset/:_id", resetValidation, async (req, res) => {
 			
 			const authHeader = req.headers["authorization"];
 			const resetToken = authHeader && authHeader.split(" ")[1];
-			if (resetToken == null) {
+			if (resetToken === null) {
 				// no token
 				console.log("resetToken not given")
 				
@@ -138,7 +138,7 @@ router.put("/reset/:_id", resetValidation, async (req, res) => {
 				}
 			}
 			
-			if (oldPassword == null) {
+			if (oldPassword === null) {
 				console.log("Account somehow not found");
 				
 				return res.status(401).json({
@@ -177,7 +177,7 @@ router.put("/reset/:_id", resetValidation, async (req, res) => {
 			});
 		} catch(err) {
 			console.log("something went wrong in reset");
-			
+			console.log(err.message);
 			return res.status(500).send(err.message);
 		}
 });
@@ -191,12 +191,12 @@ router.post("/register", registerValidation, async (req, res) => {
 			}
 			
 			const email = req.body.email;
+			console.log("password received: " + req.body.password);
 			const password = await bcrypt.hash(req.body.password, 10);
-			
 			
 			// check if email already exists
 			const duplicate = accounts.find(account => account.email === email);
-			if (duplicate != null) {
+			if (duplicate !== null) {
 				console.log("email already exists");
 				
 				// 409 might not be the best option here
@@ -229,7 +229,7 @@ router.post("/register", registerValidation, async (req, res) => {
 			});
 		} catch(err) {
 			console.log("something went wrong in register");
-			
+			console.log(err.message);
 			return res.status(500).send(err.message);
 		}
 });
@@ -238,7 +238,7 @@ router.post("/login", async (req, res) => {
 	try {
 		// depends, but may need to retrieve from db
 		const account = accounts.find(account => account.email === req.body.email);
-		if (account == null) {
+		if (account === null) {
 			console.log("email not found");
 			
 			// email not found.
@@ -247,6 +247,7 @@ router.post("/login", async (req, res) => {
 			});
 		}
 		
+		console.log("password received: " + req.body.password);
 		if(await bcrypt.compare(req.body.password, account.password)) {
 			// can change duration here to test expiry
 			const accessToken = jwt.sign(account, process.env.ACCESS_SECRET, { expiresIn: '30 days' });
@@ -270,7 +271,7 @@ router.post("/login", async (req, res) => {
 		}
 	} catch(err) {
 		console.log("something went wrong in login");
-		
+		console.log(err.message);
 		return res.status(500).send(err.message);
 	}
 });
@@ -278,7 +279,7 @@ router.post("/login", async (req, res) => {
 router.post("/authtoken", (req, res) => {
 	const authHeader = req.headers["authorization"];
 	const token = authHeader && authHeader.split(" ")[1];
-	if (token == null) {
+	if (token === null) {
 		console.log("no token provided");
 		
 		return res.status(401).json({
