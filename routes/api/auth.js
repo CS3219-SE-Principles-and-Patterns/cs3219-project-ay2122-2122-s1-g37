@@ -11,6 +11,7 @@ require("dotenv").config();
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
+// Delete when done integrating recover and reset with DB
 const accounts = [];
 
 // Might wanna store this in db?
@@ -28,6 +29,7 @@ var resetValidation = [
 ];
 
 router.post("/recover", async (req, res) => {
+	// find account with email
 	const account = accounts.find(account => account.email === req.body.email);
 	if (account === null) {
 		// email not found.
@@ -39,12 +41,14 @@ router.post("/recover", async (req, res) => {
 	}
 	
 	const email = account.email;
-	// map some random id to email
+	// map some random id to email to keep track
 	const randomID = crypto.randomBytes(16).toString('hex');
 	resets.set(randomID, email);
 	console.log(`random ID mapped to email: ${randomID}`);
 	
+	// use hashed password as secret.
 	const password = account.password;
+	// get some token that will expire in 15 mins. To expire the link that is sent to user.
 	const resetToken = jwt.sign({email: email}, password, { expiresIn: '15m' });
 	console.log(`signed reset token: ${resetToken}`);
 	
@@ -110,6 +114,7 @@ router.put("/reset/:_id", resetValidation, async (req, res) => {
 				});
 			}
 			
+			// get email from mapped random ID
 			var email = resets.get(randomID);
 			if (typeof email === undefined) {
 				// somehow email not mapped or invalid
@@ -132,6 +137,7 @@ router.put("/reset/:_id", resetValidation, async (req, res) => {
 			}
 			
 			// get password from accounts list
+			// Use email to find account's old password from DB to verify jwt token
 			let oldPassword = null;
 			let idx = -1;
 			for (let i = 0; i < accounts.length; i++) {
@@ -168,10 +174,10 @@ router.put("/reset/:_id", resetValidation, async (req, res) => {
 			}
 			
 			const newPassword = await bcrypt.hash(req.body.password, 10);
-			// set new password
+			// set new password for account with the email
 			accounts[idx].password = newPassword;
 			
-			// delete map since able to reset
+			// delete mapping since able to reset
 			resets.delete(randomID);
 			
 			console.log("Password resetted");
