@@ -92,17 +92,16 @@ function Room() {
 			if (newChatSocket && newVideoSocket) {
 				newChatSocket.disconnect();
 				newVideoSocket.disconnect();
-				axios
-					.post("/api/rooms/disconnect", { userId: PLACEHOLDER_USER_ID, roomId: id })
-					.then((res) => {
-						console.log(`${PLACEHOLDER_USER_ID} disconnected from room ${id}`);
-					})
-					.catch((err) => {
-						console.log(`${PLACEHOLDER_USER_ID} failed in disconnecting...`);
-					});
 			}
 		};
 	}, [id]);
+
+	useEffect(() => {
+		if (videoSocket) {
+			const PLACEHOLDER_USER_ID = 10;
+			videoSocket.emit("SUBSCRIBE_USER_TO_SOCKET", PLACEHOLDER_USER_ID);
+		}
+	}, [videoSocket]);
 
 	const updateUserList = useCallback(
 		(newUserList) => {

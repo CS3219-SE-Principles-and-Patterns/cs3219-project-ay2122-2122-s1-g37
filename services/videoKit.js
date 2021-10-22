@@ -17,7 +17,6 @@ const disconnectUser = (socketId, userId, roomId) => {
 		if (derr) {
 			return res.status(500).json({ message: derr.message });
 		}
-		console.log(dres);
 		if (dres.affectedRows == 0) {
 			console.log("Room or user does not exist");
 		}
@@ -27,7 +26,7 @@ const disconnectUser = (socketId, userId, roomId) => {
 };
 
 const deleteRoom = (roomId) => {
-	const sql = "DELETE FROM rooms WHERE id = ?";
+	const sql = "DELETE FROM rooms WHERE roomId = ?";
 	db.query(sql, [roomId], (derr, dres) => {
 		if (derr) {
 			console.log(`Failed to delete room ${roomId}`);
@@ -53,12 +52,17 @@ module.exports = (io) => {
 			videoIO.to(socket.id).emit("RECEIVE_ROOM_STATUS", roomHoldersMap.has(roomId));
 		});
 
+		// Pair up socket id with a user id
+		socket.on("SUBSCRIBE_USER_TO_SOCKET", (userId) => {
+			if (!socketUserMap.has(socket.id)) {
+				socketUserMap.set(socket.id, userId);
+			}
+		});
+
 		// 1. Join room via id
 		socket.on("join-room", (roomId, callback) => {
 			console.log(`${socket.id} has joined the video room ${roomId}`);
 			socket.join(roomId);
-
-			socketUserMap.set(socket.id, socket.handshake.query.userId);
 
 			// Update mapping
 			socketRoomMap.set(socket.id, roomId);
@@ -75,8 +79,9 @@ module.exports = (io) => {
 		socket.on("disconnect", () => {
 			const roomId = socketRoomMap.get(socket.id);
 
-			// disconnectUser(socket.id, socketUserMap.get(socket.id), roomId);
-			// console.log(socketUserMap);
+			if (socketUserMap.has(socket.id)) {
+				disconnectUser(socket.id, socketUserMap.get(socket.id), roomId);
+			}
 
 			// Remove user from roomSocket map
 			if (socketRoomMap.has(socket.id) && roomSocketMap.has(socketRoomMap.get(socket.id))) {
