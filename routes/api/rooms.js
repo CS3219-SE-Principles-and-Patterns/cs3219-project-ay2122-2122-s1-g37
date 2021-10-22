@@ -109,7 +109,7 @@ router.post("/join", (req, res) => {
 		"SELECT count(*) as count, (SELECT capacity FROM rooms WHERE rooms.roomId = ?) as capacity FROM users_in_rooms WHERE users_in_rooms.roomId = ?";
 	db.query(countCapacitySql, [roomId, roomId], (countCapacityErr, countCapacityRes) => {
 		if (countCapacityErr) {
-			return res.status(500).json({ message: derr.message });
+			return res.status(500).json({ message: countCapacityErr.message });
 		}
 		if (countCapacityRes[0].count >= countCapacityRes[0].capacity) {
 			return res.status(500).json({ message: "Room is full.." });
@@ -117,7 +117,7 @@ router.post("/join", (req, res) => {
 		const joinRoomSql = "INSERT INTO users_in_rooms SET ?";
 		db.query(joinRoomSql, user, (joinRoomErr, joinRoomRes) => {
 			if (joinRoomErr) {
-				return res.status(500).json({ message: derr.message });
+				return res.status(500).json({ message: joinRoomErr.message });
 			}
 			res.status(200).json({ message: "User joined room.." });
 		});

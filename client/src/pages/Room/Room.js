@@ -56,7 +56,12 @@ function Room() {
 	useEffect(() => {
 		const PLACEHOLDER_USER_ID = 10;
 
-		console.log(id);
+		let newChatSocket = null;
+		let newVideoSocket = null;
+		const serverUrl =
+			process.env.NODE_ENV && process.env.NODE_ENV === "production"
+				? URL.DEPLOYED_SERVER_URL
+				: URL.LOCAL_SERVER_URL;
 
 		axios
 			.post("/api/rooms/join", { userId: PLACEHOLDER_USER_ID, roomId: id })
@@ -64,35 +69,39 @@ function Room() {
 				// Retrieve room info
 				axios.get(`/api/rooms/${id}`).then((roomRes) => {
 					console.log("Retrieved room data");
-
 					let newRoomInfo = roomRes.data.room;
 					if (!newRoomInfo.url || newRoomInfo.url.length === 0) {
 						newRoomInfo.url = URL.FALLBACK_VIDEO;
 					}
-
 					setRoomInfo(roomRes.data.room);
 				});
 
 				// Setup sockets
-				const serverUrl =
-					process.env.NODE_ENV && process.env.NODE_ENV === "production"
-						? URL.DEPLOYED_SERVER_URL
-						: URL.LOCAL_SERVER_URL;
-				const newChatSocket = io(serverUrl + "/chat");
-				const newVideoSocket = io(serverUrl + "/video", {
+				newChatSocket = io(serverUrl + "/chat");
+				newVideoSocket = io(serverUrl + "/video", {
 					query: { userId: PLACEHOLDER_USER_ID },
 				});
 				setChatSocket(newChatSocket);
 				setVideoSocket(newVideoSocket);
-
-				return () => {
-					newChatSocket.disconnect();
-					newVideoSocket.disconnect();
-				};
 			})
 			.catch((err) => {
 				console.log(err);
 			});
+
+		return () => {
+			if (newChatSocket && newVideoSocket) {
+				newChatSocket.disconnect();
+				newVideoSocket.disconnect();
+				axios
+					.post("/api/rooms/disconnect", { userId: PLACEHOLDER_USER_ID, roomId: id })
+					.then((res) => {
+						console.log(`${PLACEHOLDER_USER_ID} disconnected from room ${id}`);
+					})
+					.catch((err) => {
+						console.log(`${PLACEHOLDER_USER_ID} failed in disconnecting...`);
+					});
+			}
+		};
 	}, [id]);
 
 	const updateUserList = useCallback(

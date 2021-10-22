@@ -75,8 +75,8 @@ module.exports = (io) => {
 		socket.on("disconnect", () => {
 			const roomId = socketRoomMap.get(socket.id);
 
-			disconnectUser(socket.id, socketUserMap.get(socket.id), roomId);
-			console.log(socketUserMap);
+			// disconnectUser(socket.id, socketUserMap.get(socket.id), roomId);
+			// console.log(socketUserMap);
 
 			// Remove user from roomSocket map
 			if (socketRoomMap.has(socket.id) && roomSocketMap.has(socketRoomMap.get(socket.id))) {
