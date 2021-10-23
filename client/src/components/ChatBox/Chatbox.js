@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import ChatboxWrapper from "./Chatbox.styled";
 import ChatContent from "./ChatContent";
 import ChatInput from "./ChatInput";
+import UserContext from "../Context/UserContext";
 
 function Chatbox({ socket, roomId }) {
 	const [messages, setMessages] = useState([]);
+	const { userInfo } = useContext(UserContext);
 
 	const receiveMessage = useCallback(
 		(msg) => {
@@ -20,7 +22,7 @@ function Chatbox({ socket, roomId }) {
 
 	const sendMessage = useCallback(
 		(msg) => {
-			const taggedMsg = `${socket.id}: ${msg}`;
+			const taggedMsg = `${userInfo.displayName}: ${msg}`;
 			receiveMessage(taggedMsg);
 			socket.emit("send-message", taggedMsg, roomId);
 		},
@@ -29,7 +31,7 @@ function Chatbox({ socket, roomId }) {
 
 	const initialize = useCallback(() => {
 		socket.emit("join-room", roomId, () => {
-			const msg = `${socket.id} has joined the chat`;
+			const msg = `${userInfo.displayName} has joined the chat`;
 			receiveMessage(msg);
 			socket.emit("send-message", msg, roomId);
 		});
