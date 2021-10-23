@@ -11,11 +11,6 @@ import {
 } from "./LoginPanel.styled";
 import UserContext from "../Context/UserContext";
 
-const loginAPI =
-	process.env.NODE_ENV && process.env.NODE_ENV === "production"
-		? "http://54.179.111.98:5000/api/auth/login"
-		: "http://localhost:5000/api/auth/login";
-
 function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback }) {
 	const emailRef = useRef(null);
 	const passRef = useRef(null);
@@ -29,7 +24,7 @@ function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback })
 		setGeneralFlag(false);
 
 		axios
-			.post(loginAPI, { email: emailRef.current.value, password: passRef.current.value })
+			.post("/api/auth/login", { email: emailRef.current.value, password: passRef.current.value })
 			.then((res) => {
 				// Add to context
 				const newUserInfo = {
