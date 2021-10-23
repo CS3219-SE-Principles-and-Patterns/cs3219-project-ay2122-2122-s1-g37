@@ -1,10 +1,10 @@
 import { Typography } from "@mui/material";
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import { useHistory } from "react-router";
 import Panel from "../Panel/Panel";
 import { ButtonWrapper, TextFieldWrapper } from "./JoinRoomPanel.styled";
 import { validate as uuidValidate } from "uuid";
-import { useUser } from "../Context/UserContext";
+import UserContext from "../Context/UserContext";
 import axios from "axios";
 
 const ERROR_MSG_INVALID_FORMAT = "Invalid room ID format";
@@ -14,7 +14,7 @@ const ERROR_MSG_ALREADY_IN = "You're already in the room!";
 function JoinRoomPanel() {
 	const inputRef = useRef(null);
 	const history = useHistory();
-	const { userInfo } = useUser();
+	const { userInfo } = useContext(UserContext);
 	const [hasError, setHasError] = useState(false);
 	const [errorMsg, setErrorMsg] = useState("");
 

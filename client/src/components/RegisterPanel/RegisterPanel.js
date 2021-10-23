@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import axios from "axios";
 import Panel from "../Panel/Panel";
 import {
@@ -7,7 +7,7 @@ import {
 	FormWrapper,
 	TextFieldWrapper,
 } from "./RegisterPanel.styled";
-import { useUser } from "../Context/UserContext";
+import UserContext from "../Context/UserContext";
 
 const credentialsErrCode = 422;
 const emailExistsErrCode = 409;
@@ -30,7 +30,7 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 	const [passwordFlag, setPasswordFlag] = useState(false);
 	const [passwordError, setPasswordError] = useState("");
 	const [passwordAgainFlag, setPasswordAgainFlag] = useState(false);
-	const { setUserInfo } = useUser();
+	const { setUserInfo } = useContext(UserContext);
 
 	const resetErrors = () => {
 		setGeneralFlag(false);
@@ -61,6 +61,7 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 						displayName: res.data.displayName,
 						email: res.data.email,
 						token: res.data.token,
+						isLoaded: true,
 					};
 					setUserInfo(newUserInfo);
 					//console.log("added user to context");

@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import React, { useRef, useState } from "react";
+import React, { useContext, useRef, useState } from "react";
 import axios from "axios";
 import Panel from "../Panel/Panel";
 import {
@@ -9,7 +9,7 @@ import {
 	RecoveryButtonWrapper,
 	TextFieldWrapper,
 } from "./LoginPanel.styled";
-import { useUser } from "../Context/UserContext";
+import UserContext from "../Context/UserContext";
 
 const loginAPI =
 	process.env.NODE_ENV && process.env.NODE_ENV === "production"
@@ -21,7 +21,7 @@ function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback })
 	const passRef = useRef(null);
 	const [generalFlag, setGeneralFlag] = useState(false);
 	const [generalMsg, setGeneralMsg] = useState("");
-	const { setUserInfo } = useUser();
+	const { setUserInfo } = useContext(UserContext);
 
 	const login = (e) => {
 		e.preventDefault();
@@ -37,6 +37,7 @@ function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback })
 					displayName: res.data.displayName,
 					email: res.data.email,
 					token: res.data.token,
+					isLoaded: true,
 				};
 				setUserInfo(newUserInfo);
 
