@@ -40,8 +40,8 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 		setPasswordAgainFlag(false);
 	};
 
-	const register = () => {
-		//console.log(`Register with name: ${nameRef.current.value}, email: ${emailRef.current.value}, password: ${passRef.current.value}, passwordAgain: ${passAgainRef.current.value}`);
+	const register = (e) => {
+		e.preventDefault();
 
 		resetErrors();
 

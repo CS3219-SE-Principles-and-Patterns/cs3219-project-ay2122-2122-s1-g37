@@ -23,8 +23,8 @@ function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback })
 	const [generalMsg, setGeneralMsg] = useState("");
 	const { setUserInfo } = useUser();
 
-	const login = () => {
-		//console.log(`login with email: ${emailRef.current.value}, password: ${passRef.current.value}`);
+	const login = (e) => {
+		e.preventDefault();
 
 		setGeneralFlag(false);
 
