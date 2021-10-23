@@ -31,8 +31,6 @@ function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback })
 		axios
 			.post(loginAPI, { email: emailRef.current.value, password: passRef.current.value })
 			.then((res) => {
-				//console.log("logged in");
-
 				// Add to context
 				const newUserInfo = {
 					userId: res.data.userId,
@@ -41,7 +39,9 @@ function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback })
 					token: res.data.token,
 				};
 				setUserInfo(newUserInfo);
-				//console.log("added user to context");
+
+				console.log(res.data);
+				console.log(newUserInfo);
 
 				// Add token to browser
 				localStorage.setItem("token", res.data.token);

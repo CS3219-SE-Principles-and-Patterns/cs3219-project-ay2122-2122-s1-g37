@@ -10,6 +10,7 @@ import { io } from "socket.io-client";
 import URL from "../../util/url";
 import { CircularProgress, Typography } from "@mui/material";
 import axios from "axios";
+import { useUser } from "../../components/Context/UserContext";
 
 const initialSettings = {
 	capacity: 15,
@@ -37,11 +38,11 @@ function Room() {
 	const [users, setUsers] = useState([]);
 	const [settings, setSettings] = useState(initialSettings);
 	const [isWaiting, setIsWaiting] = useState(true);
-
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
-
 	const [roomInfo, setRoomInfo] = useState({});
+
+	const { userInfo } = useUser();
 
 	const linkCallback = (url) => {
 		setRoomInfo({ ...roomInfo, url });
@@ -54,8 +55,6 @@ function Room() {
 
 	// Initialize sockets
 	useEffect(() => {
-		const PLACEHOLDER_USER_ID = 10;
-
 		let newChatSocket = null;
 		let newVideoSocket = null;
 		const serverUrl =
@@ -64,7 +63,7 @@ function Room() {
 				: URL.LOCAL_SERVER_URL;
 
 		axios
-			.post("/api/rooms/join", { userId: PLACEHOLDER_USER_ID, roomId: id })
+			.post("/api/rooms/join", { userId: userInfo.userId, roomId: id })
 			.then((res) => {
 				// Retrieve room info
 				axios.get(`/api/rooms/${id}`).then((roomRes) => {
@@ -79,7 +78,7 @@ function Room() {
 				// Setup sockets
 				newChatSocket = io(serverUrl + "/chat");
 				newVideoSocket = io(serverUrl + "/video", {
-					query: { userId: PLACEHOLDER_USER_ID },
+					query: { userId: userInfo.userId },
 				});
 				setChatSocket(newChatSocket);
 				setVideoSocket(newVideoSocket);
@@ -94,14 +93,13 @@ function Room() {
 				newVideoSocket.disconnect();
 			}
 		};
-	}, [id]);
+	}, [id, userInfo.userId]);
 
 	useEffect(() => {
 		if (videoSocket) {
-			const PLACEHOLDER_USER_ID = 10;
-			videoSocket.emit("SUBSCRIBE_USER_TO_SOCKET", PLACEHOLDER_USER_ID);
+			videoSocket.emit("SUBSCRIBE_USER_TO_SOCKET", userInfo.userId);
 		}
-	}, [videoSocket]);
+	}, [videoSocket, userInfo.userId]);
 
 	const updateUserList = useCallback(
 		(newUserList) => {

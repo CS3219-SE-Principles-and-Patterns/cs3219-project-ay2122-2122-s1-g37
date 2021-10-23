@@ -1,21 +1,23 @@
 import React from "react";
 import { useHistory } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
 import { Typography } from "@mui/material";
 import { ButtonWrapper } from "./CreateRoomPanel.styled";
+import axios from "axios";
 import Panel from "../Panel/Panel";
+import { useUser } from "../Context/UserContext";
 
 function CreateRoomPanel() {
+	const { userInfo } = useUser();
 	const history = useHistory();
 
 	const create = () => {
-		const PLACEHOLDER_USER_ID = 10;
+		// const PLACEHOLDER_USER_ID = 10;
 		const roomId = uuidv4();
 
 		const newRoom = {
 			roomId,
-			hostId: PLACEHOLDER_USER_ID, // To-do: replace with actual user's id, obtained from logging in
+			hostId: userInfo.userId,
 		};
 
 		axios
