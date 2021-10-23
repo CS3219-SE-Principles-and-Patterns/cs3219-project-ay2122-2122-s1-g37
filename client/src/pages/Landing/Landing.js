@@ -45,6 +45,7 @@ function Landing() {
 
 	useEffect(() => {
 		const userToken = localStorage.getItem("token");
+		console.log(`[Landing] Retrieved token: ${localStorage.getItem("token")}`);
 
 		if (userToken == null) {
 			setIsLoggedIn(false);

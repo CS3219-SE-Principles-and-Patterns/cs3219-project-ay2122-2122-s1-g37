@@ -44,6 +44,8 @@ function LoginPanel({ successCallback, toRegisterCallback, toRecoveryCallback })
 				console.log(newUserInfo);
 
 				// Add token to browser
+				console.log(`[Login] Set token: ${res.data.token}`);
+
 				localStorage.setItem("token", res.data.token);
 				successCallback();
 			})

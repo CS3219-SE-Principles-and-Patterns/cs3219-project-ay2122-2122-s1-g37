@@ -66,6 +66,8 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 					//console.log("added user to context");
 
 					// Add token to browser
+					console.log(`[Register] Set token: ${res.data.token}`);
+
 					localStorage.setItem("token", res.data.token);
 					successCallback();
 				})
