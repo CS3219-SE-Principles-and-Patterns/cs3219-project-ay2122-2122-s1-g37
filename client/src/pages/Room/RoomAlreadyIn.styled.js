@@ -3,7 +3,7 @@ import { styled as mStyled } from "@mui/material/styles";
 import { Button } from "@mui/material";
 import { theme } from "../../styles/theme";
 
-export const PleaseLoginPageWrapper = styled.div`
+export const AlreadyInPageWrapper = styled.div`
 	background: ${(props) => props.theme.lightGray};
 	height: 100%;
 	max-height: 100%;
@@ -15,8 +15,19 @@ export const PleaseLoginPageWrapper = styled.div`
 
 	h2 {
 		color: ${(props) => props.theme.white};
+		margin-bottom: 10px;
+	}
+
+	p {
+		color: ${(props) => props.theme.white};
 		margin-bottom: 20px;
 	}
+`;
+
+export const ButtonContainerWrapper = styled.div`
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	grid-column-gap: 1em;
 `;
 
 export const ButtonWrapper = mStyled(Button)({

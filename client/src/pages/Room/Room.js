@@ -33,11 +33,6 @@ const blankUser = {
 	isHost: false,
 };
 
-const ROOM_TYPE_NOT_FOUND = -1;
-const ROOM_TYPE_NORMAL = 0;
-const ROOM_TYPE_ALREADY_IN = 1;
-const ROOM_TYPE_FULL = 2;
-
 function Room() {
 	const { id } = useParams();
 	const [user, setUser] = useState(blankUser);
@@ -49,7 +44,6 @@ function Room() {
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
 	const [roomInfo, setRoomInfo] = useState({});
-	const [roomType, setRoomType] = useState(ROOM_TYPE_NORMAL);
 
 	const history = useHistory();
 	const { userInfo } = useContext(UserContext);
@@ -85,16 +79,11 @@ function Room() {
 				const userIds = res[0].data.map((entry) => entry.userId);
 				const { capacity, count } = res[1].data;
 
-				// MODIFY ROUTER TO REDIRECT/DEFAULT TO THE "/" PAGE IF NOT AUTHENTICATED
-
 				if (userIds.includes(userInfo.userId)) {
-					setRoomType(ROOM_TYPE_ALREADY_IN);
-					console.log(`You are already in that room!`);
-				} else if (count >= capacity) {
-					setRoomType(ROOM_TYPE_FULL);
-					console.log(`Room ${id} is already full (${count} / ${capacity})`);
+					history.push(`/room/${id}/alreadyin`);
+				} else if (count && capacity && count >= capacity) {
+					history.push(`/room/${id}/full`);
 				} else {
-					setRoomType(ROOM_TYPE_NORMAL);
 					axios
 						.post("/api/rooms/join", { userId: userInfo.userId, roomId: id })
 						.then((res) => {
@@ -122,7 +111,6 @@ function Room() {
 				}
 			})
 			.catch((err) => {
-				setRoomType(ROOM_TYPE_NOT_FOUND);
 				console.log(err);
 			});
 

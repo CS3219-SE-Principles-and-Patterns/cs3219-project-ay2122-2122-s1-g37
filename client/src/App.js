@@ -11,6 +11,8 @@ import NavBar from "./components/NavBar/NavBar";
 import AppWrapper from "./App.styled";
 import PleaseLogin from "./pages/PleaseLogin/PleaseLogin";
 import Loading from "./pages/Loading/Loading";
+import RoomAlreadyIn from "./pages/Room/RoomAlreadyIn";
+import RoomFull from "./pages/Room/RoomFull";
 
 function App() {
 	const [userInfo, setUserInfo] = useState({
@@ -63,6 +65,12 @@ function App() {
 						</div>
 						<div className="app-content">
 							<Switch>
+								<Route path="/room/:id/alreadyin">
+									<RoomAlreadyIn />
+								</Route>
+								<Route path="/room/:id/full">
+									<RoomFull />
+								</Route>
 								<Route path="/room/:id">
 									{(!userInfo ||
 										(userInfo &&
