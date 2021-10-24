@@ -13,6 +13,7 @@ import PleaseLogin from "./pages/PleaseLogin/PleaseLogin";
 import Loading from "./pages/Loading/Loading";
 import RoomAlreadyIn from "./pages/Room/RoomAlreadyIn";
 import RoomFull from "./pages/Room/RoomFull";
+import RoomNotFound from "./pages/Room/RoomNotFound";
 
 function App() {
 	const [userInfo, setUserInfo] = useState({
@@ -79,6 +80,9 @@ function App() {
 										userInfo.isLoaded &&
 										userInfo.token !== undefined && <Room />}
 									{userInfo && !userInfo.isLoaded && <Loading />}
+								</Route>
+								<Route path="/room_notfound">
+									<RoomNotFound />
 								</Route>
 								<Route path="/">
 									<Landing />

@@ -100,11 +100,13 @@ function Room() {
 							setVideoSocket(newVideoSocket);
 						})
 						.catch((err) => {
+							history.push("/room_notfound");
 							console.log(err);
 						});
 				}
 			})
 			.catch((err) => {
+				history.push("/room_notfound");
 				console.log(err);
 			});
 
