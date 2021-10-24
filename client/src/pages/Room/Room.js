@@ -48,12 +48,9 @@ function Room() {
 	const history = useHistory();
 	const { userInfo } = useContext(UserContext);
 
-	// temp commented out to remove warnings
-	/*
 	const linkCallback = (url) => {
 		setRoomInfo({ ...roomInfo, url });
 	};
-	*/
 
 	const saveCallback = () => {
 		console.log("SETTINGS SAVED");
@@ -62,8 +59,6 @@ function Room() {
 
 	// Join room, retrieve room's info and connect to its sockets
 	useEffect(() => {
-		console.log(userInfo);
-
 		let newChatSocket = null;
 		let newVideoSocket = null;
 		const serverUrl =
@@ -89,7 +84,6 @@ function Room() {
 						.then((res) => {
 							// Retrieve room info
 							axios.get(`/api/rooms/${id}`).then((roomRes) => {
-								console.log("Retrieved room data");
 								let newRoomInfo = roomRes.data.room;
 								if (!newRoomInfo.url || newRoomInfo.url.length === 0) {
 									newRoomInfo.url = URL.FALLBACK_VIDEO;
@@ -177,11 +171,7 @@ function Room() {
 				</div>
 			</div>
 			<div className="room-sidebar">
-				<VideoLinker
-					linkCallback={() => {
-						console.log(userInfo);
-					}}
-				/>
+				<VideoLinker linkCallback={linkCallback} />
 				<Watchmates users={users} />
 				<Chatbox socket={chatSocket} roomId={id} />
 				<RoomSettings

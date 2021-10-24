@@ -51,7 +51,6 @@ function App() {
 					token: undefined,
 					isLoaded: true,
 				});
-				console.log(err);
 			});
 	}, []);
 
