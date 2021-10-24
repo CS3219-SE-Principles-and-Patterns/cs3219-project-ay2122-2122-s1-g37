@@ -9,6 +9,8 @@ import Landing from "./pages/Landing/Landing";
 import Room from "./pages/Room/Room";
 import NavBar from "./components/NavBar/NavBar";
 import AppWrapper from "./App.styled";
+import PleaseLogin from "./pages/PleaseLogin/PleaseLogin";
+import Loading from "./pages/Loading/Loading";
 
 function App() {
 	const [userInfo, setUserInfo] = useState({
@@ -44,8 +46,8 @@ function App() {
 					userId: undefined,
 					displayName: undefined,
 					email: undefined,
-					token: userToken,
-					isLoaded: false,
+					token: undefined,
+					isLoaded: true,
 				});
 				console.log(err);
 			});
@@ -62,13 +64,14 @@ function App() {
 						<div className="app-content">
 							<Switch>
 								<Route path="/room/:id">
+									{(!userInfo ||
+										(userInfo &&
+											userInfo.isLoaded &&
+											userInfo.token === undefined)) && <PleaseLogin />}
 									{userInfo &&
-									userInfo.isLoaded &&
-									userInfo.token !== undefined ? (
-										<Room />
-									) : (
-										<div>Not authenticated</div>
-									)}
+										userInfo.isLoaded &&
+										userInfo.token !== undefined && <Room />}
+									{userInfo && !userInfo.isLoaded && <Loading />}
 								</Route>
 								<Route path="/">
 									<Landing />
