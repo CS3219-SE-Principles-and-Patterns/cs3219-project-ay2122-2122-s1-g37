@@ -14,6 +14,7 @@ import Loading from "./pages/Loading/Loading";
 import RoomAlreadyIn from "./pages/Room/RoomAlreadyIn";
 import RoomFull from "./pages/Room/RoomFull";
 import RoomNotFound from "./pages/Room/RoomNotFound";
+import NotFound from "./pages/NotFound/NotFound";
 
 function App() {
 	const [userInfo, setUserInfo] = useState({
@@ -81,11 +82,14 @@ function App() {
 										userInfo.token !== undefined && <Room />}
 									{userInfo && !userInfo.isLoaded && <Loading />}
 								</Route>
-								<Route path="/room_notfound">
+								<Route exact path="/room_notfound">
 									<RoomNotFound />
 								</Route>
-								<Route path="/">
+								<Route exact path="/">
 									<Landing />
+								</Route>
+								<Route path="*">
+									<NotFound />
 								</Route>
 							</Switch>
 						</div>
