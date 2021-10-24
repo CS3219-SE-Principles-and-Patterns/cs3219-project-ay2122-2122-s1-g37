@@ -192,7 +192,7 @@ function Room() {
 				/>
 				<Watchmates users={users} />
 				<Chatbox socket={chatSocket} roomId={id} />
-				<RoomDrawer roomId={id} settings={settings} />
+				<RoomDrawer roomId={id} settings={settings} saveCallback={saveCallback} />
 			</div>
 		</RoomPageWrapper>
 	);
