@@ -35,6 +35,7 @@ function TimeoutModal({ isOpen, closeCallback }) {
 		};
 
 		if (isOpen) {
+			setTimerDisplay(TIMEOUT_DURATION_SECONDS);
 			startTimer(TIMEOUT_DURATION_SECONDS);
 		}
 	}, [isOpen, history]);
