@@ -55,6 +55,7 @@ function VideoPlayer({
 	setIsWaiting,
 	roomInfo,
 	setRoomInfo,
+	finishCallback,
 }) {
 	const [isPlaying, setIsPlaying] = useState(true);
 	const [buffererId, setBuffererId] = useState(UNAVALIABLE);
@@ -360,7 +361,6 @@ function VideoPlayer({
 			playing={isPlaying}
 			playbackRate={playbackRate}
 			controls
-			loop
 			muted
 			config={{
 				youtube: {
@@ -378,6 +378,7 @@ function VideoPlayer({
 			onReady={readyCallback}
 			onBuffer={bufferStartCallback}
 			onBufferEnd={bufferEndCallback}
+			onEnded={finishCallback}
 			style={{
 				pointerEvents: buffererId === UNAVALIABLE ? "auto" : "none",
 				filter: buffererId === UNAVALIABLE ? "" : "blur(5px)",
