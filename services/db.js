@@ -35,7 +35,8 @@ module.exports = {
 		for (var i = 0; i < arguments.length; i++) {
 			args.push(arguments[i]);
 		}
-		var callback = args[args.length - 1]; //last arg is callback
+		var callback = args[args.length - 1];
+
 		pool.getConnection(function (err, connection) {
 			if (err) {
 				console.log(err);
@@ -44,8 +45,11 @@ module.exports = {
 			if (args.length > 2) {
 				sql_args = args[1];
 			}
+
 			connection.query(args[0], sql_args, function (err, results) {
-				connection.release(); // always put connection back in pool after last query
+				// Always put connection back in pool after last query
+				connection.release();
+
 				if (err) {
 					console.log(err);
 					return callback(err);
