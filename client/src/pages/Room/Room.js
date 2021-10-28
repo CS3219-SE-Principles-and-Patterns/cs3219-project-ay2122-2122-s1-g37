@@ -62,6 +62,20 @@ function Room() {
 		chatSocket.emit("SEND_ROOM_SETTINGS", id, newCapacity, newSettings);
 	};
 
+	const receiveKick = useCallback(
+		(userId) => {
+			if (userId === user.id) {
+				history.push("/");
+				console.log("GOT KICKED");
+			}
+		},
+		[user, history]
+	);
+	const kickCallback = (userId) => {
+		console.log(`Kick user ${userId}`);
+		chatSocket.emit("SEND_KICK", id, userId);
+	};
+
 	// Join room, retrieve room's info and connect to its sockets
 	useEffect(() => {
 		let newChatSocket = null;
@@ -148,12 +162,14 @@ function Room() {
 		if (chatSocket) {
 			chatSocket.on("update-user-list", updateUserList);
 			chatSocket.on("RECEIVE_ROOM_SETTINGS", receiveSettings);
+			chatSocket.on("RECEIVE_KICK", receiveKick);
 			return () => {
 				chatSocket.off("update-user-list", updateUserList);
 				chatSocket.off("RECEIVE_ROOM_SETTINGS", receiveSettings);
+				chatSocket.off("RECEIVE_KICK", receiveKick);
 			};
 		}
-	}, [chatSocket, updateUserList, receiveSettings]);
+	}, [chatSocket, updateUserList, receiveSettings, receiveKick]);
 
 	return (
 		<RoomPageWrapper>
@@ -188,6 +204,7 @@ function Room() {
 					isHost={user.isHost}
 					capacity={roomInfo.capacity}
 					settings={settings}
+					kickCallback={kickCallback}
 					saveCallback={saveCallback}
 				/>
 			</div>

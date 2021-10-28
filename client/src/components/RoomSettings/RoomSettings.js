@@ -4,7 +4,7 @@ import { ButtonWrapper, ContentWrapper, ModalWrapper } from "./RoomSettings.styl
 import RoomTable from "./RoomTable";
 import axios from "axios";
 
-function RoomSettings({ roomId, capacity, settings, saveCallback }) {
+function RoomSettings({ roomId, capacity, settings, kickCallback, saveCallback }) {
 	const [open, setOpen] = useState(false);
 	const capacityRef = useRef(null);
 
@@ -21,15 +21,16 @@ function RoomSettings({ roomId, capacity, settings, saveCallback }) {
 		const newSettings = settings;
 
 		// To-do: Update settings in DB
-
-		axios
-			.put("/api/rooms/capacity", { roomId, capacity: newCapacity })
-			.then((res) => {
-				saveCallback(newCapacity, newSettings);
-			})
-			.catch((err) => {
-				console.log(err);
-			});
+		if (newCapacity || newCapacity.length > 0) {
+			axios
+				.put("/api/rooms/capacity", { roomId, capacity: newCapacity })
+				.then((res) => {
+					saveCallback(newCapacity, newSettings);
+				})
+				.catch((err) => {
+					console.log(err);
+				});
+		}
 
 		closeModal();
 	};
@@ -55,7 +56,7 @@ function RoomSettings({ roomId, capacity, settings, saveCallback }) {
 						/>
 					</div>
 					<div className="settings-table">
-						<RoomTable settings={settings} />
+						<RoomTable settings={settings} kickCallback={kickCallback} />
 					</div>
 					<div className="settings-btns">
 						<ButtonWrapper variant="contained" onClick={save}>

@@ -24,6 +24,11 @@ module.exports = (io) => {
 			}
 		});
 
+		socket.on("SEND_KICK", (roomId, userId) => {
+			console.log(`kicking ${userId} from room ${roomId}`);
+			socket.to(roomId).emit("RECEIVE_KICK", userId);
+		});
+
 		socket.on("SEND_ROOM_SETTINGS", (roomId, capacity, settings) => {
 			console.log(`${socket.id} change ${roomId}'s capacity to ${capacity}`);
 			socket.to(roomId).emit("RECEIVE_ROOM_SETTINGS", capacity, settings);
@@ -35,7 +40,8 @@ module.exports = (io) => {
 			socket.join(roomId);
 
 			// Update mapping
-			socketRoomMap.set(socket.id, roomId);
+			socketRoomMap.set(socket.id, roomId); // To-do. change to multiple rooms ?
+
 			let userList;
 			if (roomSocketMap.has(roomId)) {
 				userList = roomSocketMap.get(roomId);
@@ -50,8 +56,7 @@ module.exports = (io) => {
 				userList = roomSocketMap.get(roomId);
 			}
 
-			socket.to(roomId).emit("update-user-list", userList);
-			socket.emit("update-user-list", userList);
+			roomIO.in(roomId).emit("update-user-list", userList);
 			callback();
 		});
 

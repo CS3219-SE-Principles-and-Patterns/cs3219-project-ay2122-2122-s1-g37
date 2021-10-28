@@ -2,7 +2,7 @@ import { Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from "@mui
 import React from "react";
 import { TableContainerWrapper, KickButtonWrapper } from "./RoomTable.styled";
 
-function RoomTable({ settings }) {
+function RoomTable({ settings, kickCallback }) {
 	return (
 		<TableContainerWrapper>
 			<Table stickyHeader>
@@ -29,7 +29,12 @@ function RoomTable({ settings }) {
 								/>
 							</TableCell>
 							<TableCell>
-								<KickButtonWrapper variant="contained">Kick</KickButtonWrapper>
+								<KickButtonWrapper
+									variant="contained"
+									onClick={() => kickCallback(user.id)}
+								>
+									Kick
+								</KickButtonWrapper>
 							</TableCell>
 						</TableRow>
 					))}
