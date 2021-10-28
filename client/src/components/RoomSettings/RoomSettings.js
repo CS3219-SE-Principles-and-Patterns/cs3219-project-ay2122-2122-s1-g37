@@ -51,7 +51,7 @@ function RoomSettings({ roomId, capacity, settings, kickCallback, saveCallback }
 							className="capacity-input"
 							type="number"
 							size="small"
-							placeholder={capacity}
+							placeholder="capacity"
 							inputRef={capacityRef}
 						/>
 					</div>
