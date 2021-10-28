@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { ContentWrapper, ModalWrapper } from "./TimeoutModal.styled";
 import { useHistory } from "react-router";
 
-const TIMEOUT_DURATION_SECONDS = 5;
+const TIMEOUT_DURATION_SECONDS = 60;
 
 function TimeoutModal({ isOpen, closeCallback }) {
 	const [timerDisplay, setTimerDisplay] = useState(TIMEOUT_DURATION_SECONDS);
