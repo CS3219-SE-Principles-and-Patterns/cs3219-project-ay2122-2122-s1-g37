@@ -4,7 +4,7 @@ import { Modal, Button } from "@mui/material";
 import { theme } from "../../styles/theme";
 
 export const ModalWrapper = mStyled(Modal)`
-    position: fixed;
+	position: fixed;
     z-index: 1300;
     right: 0;
     bottom: 0;
@@ -51,6 +51,7 @@ export const ContentWrapper = styled.div`
 	}
 
 	.settings-table {
+		min-width: 0;
 		min-height: 0;
 	}
 
