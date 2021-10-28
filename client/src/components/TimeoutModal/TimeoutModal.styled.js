@@ -15,16 +15,21 @@ export const ModalWrapper = mStyled(Modal)`
 `;
 
 export const ContentWrapper = styled.div`
-	width: 40%;
-	height: 50%;
-	padding: 15px;
-	background: ${(props) => props.theme.darkGray};
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
 
-	h4 {
+	background: ${(props) => props.theme.darkGray};
+	padding: 30px;
+
+	h4,
+	span {
 		color: ${(props) => props.theme.orange};
 	}
 
-	h6 {
+	h6,
+	p {
 		color: ${(props) => props.theme.white};
 	}
 `;
