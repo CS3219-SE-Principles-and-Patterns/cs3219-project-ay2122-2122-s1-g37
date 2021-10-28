@@ -24,6 +24,11 @@ module.exports = (io) => {
 			}
 		});
 
+		socket.on("SEND_ROOM_SETTINGS", (roomId, capacity, settings) => {
+			console.log(`${socket.id} change ${roomId}'s capacity to ${capacity}`);
+			socket.to(roomId).emit("RECEIVE_ROOM_SETTINGS", capacity, settings);
+		});
+
 		// join the client to the room "number" received.
 		socket.on("join-room", (roomId, callback) => {
 			console.log(`${socket.id} has joined the room ${roomId}`);

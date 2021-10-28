@@ -3,7 +3,7 @@ import { ButtonWrapper } from "../ChatBox/ChatInput.styled";
 import RoomSettings from "../RoomSettings/RoomSettings";
 import { RoomDrawerWrapper } from "./RoomDrawer.styled";
 
-function RoomDrawer({ roomId, settings, saveCallback }) {
+function RoomDrawer({ roomId, capacity, settings, saveCallback }) {
 	const copy = (content) => {
 		const element = document.createElement("textarea");
 		element.value = content;
@@ -26,8 +26,9 @@ function RoomDrawer({ roomId, settings, saveCallback }) {
 			<ButtonWrapper onClick={copyCode}>Share via code</ButtonWrapper>
 			<ButtonWrapper onClick={copyLink}>Share via link</ButtonWrapper>
 			<RoomSettings
-				capacity={settings.capacity}
-				users={settings.users}
+				roomId={roomId}
+				capacity={capacity}
+				settings={settings}
 				saveCallback={saveCallback}
 			/>
 		</RoomDrawerWrapper>

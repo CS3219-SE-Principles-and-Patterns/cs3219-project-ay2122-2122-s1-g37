@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { TextField, Typography } from "@mui/material";
 import { ButtonWrapper, ContentWrapper, ModalWrapper } from "./RoomSettings.styled";
 import RoomTable from "./RoomTable";
+import axios from "axios";
 
-function RoomSettings({ capacity, users, saveCallback }) {
+function RoomSettings({ roomId, capacity, settings, saveCallback }) {
 	const [open, setOpen] = useState(false);
+	const capacityRef = useRef(null);
 
 	const openModel = () => {
 		setOpen(true);
@@ -15,7 +17,21 @@ function RoomSettings({ capacity, users, saveCallback }) {
 	};
 
 	const save = () => {
-		saveCallback();
+		const newCapacity = capacityRef.current.value;
+		const newSettings = settings;
+
+		// To-do: Update settings in DB
+
+		axios
+			.put("/api/rooms/capacity", { roomId, capacity: newCapacity })
+			.then((res) => {
+				saveCallback(newCapacity, newSettings);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+
+		closeModal();
 	};
 
 	return (
@@ -35,10 +51,11 @@ function RoomSettings({ capacity, users, saveCallback }) {
 							type="number"
 							size="small"
 							placeholder={capacity}
+							inputRef={capacityRef}
 						/>
 					</div>
 					<div className="settings-table">
-						<RoomTable users={users} />
+						<RoomTable settings={settings} />
 					</div>
 					<div className="settings-btns">
 						<ButtonWrapper variant="contained" onClick={save}>

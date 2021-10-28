@@ -14,7 +14,6 @@ import { useHistory } from "react-router";
 import RoomDrawer from "../../components/RoomDrawer/RoomDrawer";
 
 const initialSettings = {
-	capacity: 15,
 	users: [
 		{ id: 1, name: "User1", canChat: true, canVideo: true },
 		{ id: 2, name: "User2", canChat: false, canVideo: true },
@@ -37,9 +36,7 @@ function Room() {
 	const { id } = useParams();
 	const [user, setUser] = useState(blankUser);
 	const [users, setUsers] = useState([]);
-	const [settings] = useState(initialSettings);
-	// temp commented out to remove warnings. Remove above when setSettings is used.
-	//const [settings, setSettings] = useState(initialSettings);
+	const [settings, setSettings] = useState(initialSettings);
 	const [isWaiting, setIsWaiting] = useState(true);
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
@@ -52,9 +49,17 @@ function Room() {
 		setRoomInfo({ ...roomInfo, url });
 	};
 
-	const saveCallback = () => {
-		console.log("SETTINGS SAVED");
-		// Broadcast settings to all other users;
+	const receiveSettings = useCallback(
+		(newCapacity, newSettings) => {
+			setRoomInfo({ ...roomInfo, newCapacity });
+			setSettings(newSettings);
+		},
+		[roomInfo]
+	);
+	const saveCallback = (newCapacity, newSettings) => {
+		setRoomInfo({ ...roomInfo, capacity: newCapacity });
+		setSettings(newSettings);
+		chatSocket.emit("SEND_ROOM_SETTINGS", id, newCapacity, newSettings);
 	};
 
 	// Join room, retrieve room's info and connect to its sockets
@@ -142,11 +147,13 @@ function Room() {
 	useEffect(() => {
 		if (chatSocket) {
 			chatSocket.on("update-user-list", updateUserList);
+			chatSocket.on("RECEIVE_ROOM_SETTINGS", receiveSettings);
 			return () => {
 				chatSocket.off("update-user-list", updateUserList);
+				chatSocket.off("RECEIVE_ROOM_SETTINGS", receiveSettings);
 			};
 		}
-	}, [chatSocket, updateUserList]);
+	}, [chatSocket, updateUserList, receiveSettings]);
 
 	return (
 		<RoomPageWrapper>
@@ -176,7 +183,12 @@ function Room() {
 				<VideoLinker linkCallback={linkCallback} />
 				<Watchmates users={users} />
 				<Chatbox socket={chatSocket} roomId={id} />
-				<RoomDrawer roomId={id} settings={settings} saveCallback={saveCallback} />
+				<RoomDrawer
+					roomId={id}
+					capacity={roomInfo.capacity}
+					settings={settings}
+					saveCallback={saveCallback}
+				/>
 			</div>
 		</RoomPageWrapper>
 	);

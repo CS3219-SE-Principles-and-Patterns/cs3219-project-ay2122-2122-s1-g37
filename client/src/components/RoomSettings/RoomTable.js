@@ -2,7 +2,7 @@ import { Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from "@mui
 import React from "react";
 import { TableContainerWrapper, KickButtonWrapper } from "./RoomTable.styled";
 
-function RoomTable({ users }) {
+function RoomTable({ settings }) {
 	return (
 		<TableContainerWrapper>
 			<Table stickyHeader>
@@ -13,7 +13,7 @@ function RoomTable({ users }) {
 					<TableCell>Actions</TableCell>
 				</TableHead>
 				<TableBody>
-					{users.map((user) => (
+					{settings.users.map((user) => (
 						<TableRow key={user.id}>
 							<TableCell>{user.name}</TableCell>
 							<TableCell>
