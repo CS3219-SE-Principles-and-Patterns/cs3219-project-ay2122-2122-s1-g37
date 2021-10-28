@@ -100,7 +100,7 @@ function Room() {
 				} else {
 					axios
 						.post("/api/rooms/join", { userId: userInfo.userId, roomId: id })
-						.then((res) => {
+						.then((joinRes) => {
 							// Retrieve room info
 							axios.get(`/api/rooms/${id}`).then((roomRes) => {
 								let newRoomInfo = roomRes.data.room;
@@ -144,18 +144,21 @@ function Room() {
 	}, [videoSocket, userInfo]);
 
 	const updateUserList = useCallback(
-		(newUserList) => {
-			if (chatSocket) {
-				for (let i = 0; i < newUserList.length; i++) {
-					if (newUserList[i].id === chatSocket.id) {
-						setUser(newUserList[i]);
-						break;
+		(hostId) => {
+			axios.get(`/api/rooms/${id}/users`).then((res) => {
+				const newUsers = res.data;
+				for (let i = 0; i < newUsers.length; i++) {
+					newUsers[i] = { ...newUsers[i], isHost: newUsers[i].userId === hostId };
+					if (newUsers[i].userId === userInfo.userId) {
+						const currUser = newUsers.splice(i, 1)[0];
+						newUsers.unshift(currUser);
+						setUser(currUser);
 					}
 				}
-			}
-			setUsers(newUserList);
+				setUsers(newUsers);
+			});
 		},
-		[setUsers, chatSocket]
+		[setUsers, userInfo, id]
 	);
 
 	useEffect(() => {

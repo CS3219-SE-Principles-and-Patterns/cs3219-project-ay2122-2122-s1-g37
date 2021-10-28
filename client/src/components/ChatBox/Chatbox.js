@@ -30,12 +30,12 @@ function Chatbox({ socket, roomId }) {
 	);
 
 	const initialize = useCallback(() => {
-		socket.emit("join-room", roomId, () => {
+		socket.emit("join-room", roomId, userInfo.userId, () => {
 			const msg = `${userInfo.displayName} has joined the chat`;
 			receiveMessage(msg);
 			socket.emit("send-message", msg, roomId);
 		});
-	}, [receiveMessage, socket, roomId, userInfo.displayName]);
+	}, [receiveMessage, socket, roomId, userInfo]);
 
 	// Reset socket event handlers when Chatbox re-render
 	useEffect(() => {
