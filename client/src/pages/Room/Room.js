@@ -185,6 +185,7 @@ function Room() {
 				<Chatbox socket={chatSocket} roomId={id} />
 				<RoomDrawer
 					roomId={id}
+					isHost={user.isHost}
 					capacity={roomInfo.capacity}
 					settings={settings}
 					saveCallback={saveCallback}
