@@ -77,6 +77,7 @@ module.exports = (io) => {
 				}
 			}
 
+			socketUserMap.delete(socket.id);
 			roomUsersMap.set(roomId, newUserList);
 			socket.to(roomId).emit("update-user-list", newUserList, newUserList[0]);
 		});
