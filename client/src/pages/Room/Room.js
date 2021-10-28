@@ -144,9 +144,9 @@ function Room() {
 	}, [videoSocket, userInfo]);
 
 	const updateUserList = useCallback(
-		(hostId) => {
+		(userList, hostId) => {
 			axios.get(`/api/rooms/${id}/users`).then((res) => {
-				const newUsers = res.data;
+				const newUsers = res.data.filter((user) => userList.includes(user.userId));
 				for (let i = 0; i < newUsers.length; i++) {
 					newUsers[i] = { ...newUsers[i], isHost: newUsers[i].userId === hostId };
 					if (newUsers[i].userId === userInfo.userId) {

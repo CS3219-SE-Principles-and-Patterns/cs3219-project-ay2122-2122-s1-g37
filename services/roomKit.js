@@ -49,11 +49,11 @@ module.exports = (io) => {
 				newList = roomUsersMap.get(roomId);
 				newList.push(userId);
 				roomUsersMap.set(roomId, newList);
-				roomIO.in(roomId).emit("update-user-list", newList[0]);
+				roomIO.in(roomId).emit("update-user-list", newList, newList[0]);
 			} else {
 				newList = [userId];
 				roomUsersMap.set(roomId, newList);
-				roomIO.in(roomId).emit("update-user-list", userId);
+				roomIO.in(roomId).emit("update-user-list", newList, userId);
 			}
 
 			callback();
@@ -72,13 +72,13 @@ module.exports = (io) => {
 
 			let newUserList = roomUsersMap.get(roomId);
 			for (let i = 0; i < newUserList.length; i++) {
-				if (newUserList[i] === `${userId}`) {
+				if (newUserList[i] === userId) {
 					newUserList.splice(i, 1);
 				}
 			}
 
 			roomUsersMap.set(roomId, newUserList);
-			socket.to(roomId).emit("update-user-list", newUserList[0]);
+			socket.to(roomId).emit("update-user-list", newUserList, newUserList[0]);
 		});
 	});
 };
