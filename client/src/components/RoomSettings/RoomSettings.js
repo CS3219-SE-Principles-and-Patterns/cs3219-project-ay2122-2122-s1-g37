@@ -25,12 +25,15 @@ function RoomSettings({ capacity, users, saveCallback }) {
 			</ButtonWrapper>
 			<ModalWrapper open={open} onClose={closeModal}>
 				<ContentWrapper>
-					<Typography className="settings-title">Room settings</Typography>
+					<Typography className="settings-title" variant="h5">
+						Room settings
+					</Typography>
 					<div className="settings-capacity">
 						<Typography className="capacity-text">Max capacity (Up to 15):</Typography>
 						<TextField
 							className="capacity-input"
 							type="number"
+							size="small"
 							placeholder={capacity}
 						/>
 					</div>

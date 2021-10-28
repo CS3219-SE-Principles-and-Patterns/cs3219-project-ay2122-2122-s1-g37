@@ -21,21 +21,14 @@ export const ContentWrapper = styled.div`
 	padding: 15px;
 	background: ${(props) => props.theme.darkGray};
 
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	grid-template-rows: auto 1fr 5fr 1fr;
 
 	.settings-title {
-		height: 5%;
-		max-height: 5%;
-
 		color: ${(props) => props.theme.orange};
-		font-size: 1.5em;
 	}
 
 	.settings-capacity {
-		height: 10%;
-		max-height: 10%;
-
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-start;
@@ -58,18 +51,15 @@ export const ContentWrapper = styled.div`
 	}
 
 	.settings-table {
-		height: 75%;
-		max-height: 75%;
+		min-height: 0;
 	}
 
 	.settings-btns {
-		height: 10%;
-		max-height: 10%;
-
 		display: flex;
 		flex-direction: row;
 		justify-content: flex-end;
 		align-items: center;
+		column-gap: 1em;
 	}
 `;
 
