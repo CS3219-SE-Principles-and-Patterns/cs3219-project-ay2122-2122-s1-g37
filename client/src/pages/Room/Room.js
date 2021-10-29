@@ -1,42 +1,24 @@
 import React, { useState, useEffect, useCallback, useContext } from "react";
-import { useParams } from "react-router";
+import { useHistory, useParams } from "react-router";
+import { io } from "socket.io-client";
+import { CircularProgress, Typography } from "@mui/material";
+import axios from "axios";
+
+import URL from "../../util/url";
+
 import Chatbox from "../../components/ChatBox/Chatbox";
 import VideoLinker from "../../components/VideoLinker/VideoLinker";
 import VideoPlayer from "../../components/VideoPlayer/VideoPlayer";
 import Watchmates from "../../components/Watchmates/Watchmates";
-import RoomPageWrapper from "./Room.styled";
-import { io } from "socket.io-client";
-import URL from "../../util/url";
-import { CircularProgress, Typography } from "@mui/material";
-import axios from "axios";
 import UserContext from "../../components/Context/UserContext";
-import { useHistory } from "react-router";
 import RoomDrawer from "../../components/RoomDrawer/RoomDrawer";
-
-const initialSettings = {
-	users: [
-		{ id: 1, name: "User1", canChat: true, canVideo: true },
-		{ id: 2, name: "User2", canChat: false, canVideo: true },
-		{ id: 3, name: "User3", canChat: false, canVideo: true },
-		{ id: 4, name: "User4", canChat: false, canVideo: true },
-		{ id: 5, name: "User5", canChat: false, canVideo: true },
-		{ id: 6, name: "User6", canChat: false, canVideo: true },
-		{ id: 7, name: "User7", canChat: false, canVideo: true },
-		{ id: 8, name: "User8", canChat: false, canVideo: true },
-	],
-};
-
-const blankUser = {
-	id: "",
-	name: "",
-	isHost: false,
-};
+import RoomPageWrapper from "./Room.styled";
 
 function Room() {
 	const { id } = useParams();
-	const [user, setUser] = useState(blankUser);
+	const [user, setUser] = useState({});
 	const [users, setUsers] = useState([]);
-	const [settings, setSettings] = useState(initialSettings);
+	const [settings, setSettings] = useState({});
 	const [isWaiting, setIsWaiting] = useState(true);
 	const [isLinkerDisabled, setIsLinkerDisabled] = useState(false);
 	const [isChatDisabled, setIsChatDisabled] = useState(false);
@@ -47,10 +29,12 @@ function Room() {
 	const history = useHistory();
 	const { userInfo } = useContext(UserContext);
 
+	// Handle changing of video URL
 	const linkCallback = (url) => {
 		setRoomInfo({ ...roomInfo, url });
 	};
 
+	// Handle changing of room settings
 	const receiveSettings = useCallback(
 		(newCapacity, newSettings) => {
 			setRoomInfo({ ...roomInfo, newCapacity });
@@ -64,6 +48,7 @@ function Room() {
 		chatSocket.emit("SEND_ROOM_SETTINGS", id, newCapacity, newSettings);
 	};
 
+	// Handle kicking of users
 	const receiveKick = useCallback(
 		(userId) => {
 			if (userId === user.userId) {
@@ -78,7 +63,7 @@ function Room() {
 		chatSocket.emit("SEND_KICK", id, userId);
 	};
 
-	// Join room, retrieve room's info and connect to its sockets
+	// Guide user to join room, retrieve room's info and connect to its sockets
 	useEffect(() => {
 		let newChatSocket = null;
 		let newVideoSocket = null;
@@ -121,7 +106,7 @@ function Room() {
 							setVideoSocket(newVideoSocket);
 
 							// TEMPORARY PLACEHOLDER
-							// To-do: Replace with fetching settings
+							// To-do: GET settings from DB
 							setSettings({
 								users: joinRes.data.map((user) => {
 									return {
@@ -152,43 +137,49 @@ function Room() {
 		};
 	}, [id, userInfo, history]);
 
+	// Tag socket ID with user's ID
 	useEffect(() => {
 		if (videoSocket && userInfo) {
 			videoSocket.emit("SUBSCRIBE_USER_TO_SOCKET", userInfo.userId);
 		}
 	}, [videoSocket, userInfo]);
 
+	// Refresh the list of users and settings
 	const updateUserList = useCallback(
 		(userList, hostId) => {
-			axios.get(`/api/rooms/${id}/users`).then((res) => {
-				const newUsers = res.data.filter((user) => userList.includes(user.userId));
-				for (let i = 0; i < newUsers.length; i++) {
-					newUsers[i] = { ...newUsers[i], isHost: newUsers[i].userId === hostId };
-					if (newUsers[i].userId === userInfo.userId) {
-						const currUser = newUsers.splice(i, 1)[0];
-						newUsers.unshift(currUser);
-						setUser(currUser);
+			axios
+				.get(`/api/rooms/${id}/users`)
+				.then((res) => {
+					const newUsers = res.data.filter((user) => userList.includes(user.userId));
+					for (let i = 0; i < newUsers.length; i++) {
+						newUsers[i] = { ...newUsers[i], isHost: newUsers[i].userId === hostId };
+						if (newUsers[i].userId === userInfo.userId) {
+							const currUser = newUsers.splice(i, 1)[0];
+							newUsers.unshift(currUser);
+							setUser(currUser);
+						}
 					}
-				}
-				setUsers(newUsers);
+					setUsers(newUsers);
 
-				// TEMPORARY PLACEHOLDER
-				// To-do: Replace with fetching settings
-				setSettings({
-					users: newUsers.map((user) => {
-						return {
-							...user,
-							displayName: user.userId,
-							canChat: true,
-							canVideo: true,
-						};
-					}),
-				});
-			});
+					// TEMPORARY PLACEHOLDER
+					// To-do: GET settings from DB
+					setSettings({
+						users: newUsers.map((user) => {
+							return {
+								...user,
+								displayName: user.userId,
+								canChat: true,
+								canVideo: true,
+							};
+						}),
+					});
+				})
+				.catch((err) => console.log(err));
 		},
 		[setUsers, userInfo, id]
 	);
 
+	// Attach/Deattach event on/off the chat socket
 	useEffect(() => {
 		if (chatSocket) {
 			chatSocket.on("update-user-list", updateUserList);

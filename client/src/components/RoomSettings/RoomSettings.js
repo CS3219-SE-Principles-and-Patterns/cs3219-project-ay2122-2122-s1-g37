@@ -20,7 +20,6 @@ function RoomSettings({ roomId, capacity, settings, kickCallback, saveCallback }
 	const save = () => {
 		const newCapacity = capacityRef.current.value;
 
-		// To-do: Update settings in DB
 		if (newCapacity || newCapacity.length > 0) {
 			axios
 				.put("/api/rooms/capacity", { roomId, capacity: newCapacity })
@@ -29,6 +28,8 @@ function RoomSettings({ roomId, capacity, settings, kickCallback, saveCallback }
 					console.log(err);
 				});
 		}
+
+		// To-do: PUT settings to DB
 
 		saveCallback(newCapacity, currSettings);
 		closeModal();
