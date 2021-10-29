@@ -1,8 +1,16 @@
 import { Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
-import React from "react";
+import React, { useEffect, useContext } from "react";
 import { TableContainerWrapper, KickButtonWrapper } from "./RoomTable.styled";
+import UserContext from "../../components/Context/UserContext";
 
 function RoomTable({ settings, kickCallback }) {
+	const { userInfo } = useContext(UserContext);
+
+	useEffect(() => {
+		console.log("Settings received by table:");
+		console.log(settings);
+	}, [settings]);
+
 	return (
 		<TableContainerWrapper>
 			<Table stickyHeader>
@@ -14,8 +22,8 @@ function RoomTable({ settings, kickCallback }) {
 				</TableHead>
 				<TableBody>
 					{settings.users.map((user) => (
-						<TableRow key={user.id}>
-							<TableCell>{user.name}</TableCell>
+						<TableRow key={user.userId}>
+							<TableCell>{user.displayName}</TableCell>
 							<TableCell>
 								<Checkbox
 									className="table-checkbox"
@@ -31,7 +39,8 @@ function RoomTable({ settings, kickCallback }) {
 							<TableCell>
 								<KickButtonWrapper
 									variant="contained"
-									onClick={() => kickCallback(user.id)}
+									disabled={user.userId === userInfo.userId}
+									onClick={() => kickCallback(user.userId)}
 								>
 									Kick
 								</KickButtonWrapper>

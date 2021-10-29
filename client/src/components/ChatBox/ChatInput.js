@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { ButtonWrapper, ChatInputWrapper, TextFieldWrapper } from "./ChatInput.styled";
 
-function ChatInput({ onSubmit }) {
+function ChatInput({ isDisabled = false, onSubmit }) {
 	const inputRef = useRef(null);
 
 	const submitMsg = (e) => {
@@ -14,6 +14,7 @@ function ChatInput({ onSubmit }) {
 		<form onSubmit={submitMsg}>
 			<ChatInputWrapper>
 				<TextFieldWrapper
+					disabled={isDisabled}
 					data-cy="chat-input"
 					className="chatinput-textfield"
 					inputRef={inputRef}

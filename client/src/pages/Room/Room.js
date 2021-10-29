@@ -64,7 +64,8 @@ function Room() {
 
 	const receiveKick = useCallback(
 		(userId) => {
-			if (userId === user.id) {
+			console.log(`ToKick: ${userId} Self: ${user.userId}`);
+			if (userId === user.userId) {
 				history.push("/");
 				console.log("GOT KICKED");
 			}
@@ -117,6 +118,18 @@ function Room() {
 							});
 							setChatSocket(newChatSocket);
 							setVideoSocket(newVideoSocket);
+
+							// TEMPORARY PLACEHOLDER
+							setSettings({
+								users: joinRes.data.map((user) => {
+									return {
+										...user,
+										displayName: user.userId,
+										canChat: false,
+										canVideo: false,
+									};
+								}),
+							});
 						})
 						.catch((err) => {
 							history.push("/room_notfound");
@@ -156,6 +169,18 @@ function Room() {
 					}
 				}
 				setUsers(newUsers);
+
+				// TEMPORARY PLACEHOLDER
+				setSettings({
+					users: newUsers.map((user) => {
+						return {
+							...user,
+							displayName: user.userId,
+							canChat: false,
+							canVideo: false,
+						};
+					}),
+				});
 			});
 		},
 		[setUsers, userInfo, id]

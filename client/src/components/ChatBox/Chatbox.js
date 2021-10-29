@@ -4,7 +4,7 @@ import ChatContent from "./ChatContent";
 import ChatInput from "./ChatInput";
 import UserContext from "../Context/UserContext";
 
-function Chatbox({ socket, roomId }) {
+function Chatbox({ isDisabled = false, socket, roomId }) {
 	const [messages, setMessages] = useState([]);
 	const { userInfo } = useContext(UserContext);
 
@@ -55,7 +55,7 @@ function Chatbox({ socket, roomId }) {
 				<ChatContent messages={messages} />
 			</div>
 			<div className="chatbox-input">
-				<ChatInput onSubmit={sendMessage} />
+				<ChatInput onSubmit={sendMessage} isDisabled={isDisabled} />
 			</div>
 		</ChatboxWrapper>
 	);
