@@ -12,7 +12,6 @@ export const RoomPageWrapper = styled.div`
 
 	@media (max-width: 1000px) {
 		height: 100%;
-		// max-height: 100%;
 		justify-content: center;
 		align-items: center;
 	}
