@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { TextField, Typography } from "@mui/material";
 import { ButtonWrapper, ContentWrapper, ModalWrapper } from "./RoomSettings.styled";
 import RoomTable from "./RoomTable";
@@ -6,6 +6,7 @@ import axios from "axios";
 
 function RoomSettings({ roomId, capacity, settings, kickCallback, saveCallback }) {
 	const [open, setOpen] = useState(false);
+	const [currSettings, setCurrSettings] = useState({});
 	const capacityRef = useRef(null);
 
 	const openModel = () => {
@@ -18,22 +19,24 @@ function RoomSettings({ roomId, capacity, settings, kickCallback, saveCallback }
 
 	const save = () => {
 		const newCapacity = capacityRef.current.value;
-		const newSettings = settings;
 
 		// To-do: Update settings in DB
 		if (newCapacity || newCapacity.length > 0) {
 			axios
 				.put("/api/rooms/capacity", { roomId, capacity: newCapacity })
-				.then((res) => {
-					saveCallback(newCapacity, newSettings);
-				})
+				.then((res) => {})
 				.catch((err) => {
 					console.log(err);
 				});
 		}
 
+		saveCallback(newCapacity, currSettings);
 		closeModal();
 	};
+
+	useEffect(() => {
+		setCurrSettings(settings);
+	}, [settings]);
 
 	return (
 		<>
@@ -56,7 +59,11 @@ function RoomSettings({ roomId, capacity, settings, kickCallback, saveCallback }
 						/>
 					</div>
 					<div className="settings-table">
-						<RoomTable settings={settings} kickCallback={kickCallback} />
+						<RoomTable
+							settings={currSettings}
+							setSettings={setCurrSettings}
+							kickCallback={kickCallback}
+						/>
 					</div>
 					<div className="settings-btns">
 						<ButtonWrapper variant="contained" onClick={save}>

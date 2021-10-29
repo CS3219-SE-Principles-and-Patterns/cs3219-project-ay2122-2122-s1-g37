@@ -21,7 +21,12 @@ function ChatInput({ isDisabled = false, onSubmit }) {
 					placeholder="Chat here..."
 					size="small"
 				/>
-				<ButtonWrapper className="chatinput-btn" variant="contained" onClick={submitMsg}>
+				<ButtonWrapper
+					className="chatinput-btn"
+					variant="contained"
+					onClick={submitMsg}
+					disabled={isDisabled}
+				>
 					Submit
 				</ButtonWrapper>
 			</ChatInputWrapper>

@@ -38,6 +38,8 @@ function Room() {
 	const [users, setUsers] = useState([]);
 	const [settings, setSettings] = useState(initialSettings);
 	const [isWaiting, setIsWaiting] = useState(true);
+	const [isLinkerDisabled, setIsLinkerDisabled] = useState(false);
+	const [isChatDisabled, setIsChatDisabled] = useState(false);
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
 	const [roomInfo, setRoomInfo] = useState({});
@@ -64,7 +66,6 @@ function Room() {
 
 	const receiveKick = useCallback(
 		(userId) => {
-			console.log(`ToKick: ${userId} Self: ${user.userId}`);
 			if (userId === user.userId) {
 				history.push("/");
 				console.log("GOT KICKED");
@@ -120,13 +121,14 @@ function Room() {
 							setVideoSocket(newVideoSocket);
 
 							// TEMPORARY PLACEHOLDER
+							// To-do: Replace with fetching settings
 							setSettings({
 								users: joinRes.data.map((user) => {
 									return {
 										...user,
 										displayName: user.userId,
-										canChat: false,
-										canVideo: false,
+										canChat: true,
+										canVideo: true,
 									};
 								}),
 							});
@@ -171,13 +173,14 @@ function Room() {
 				setUsers(newUsers);
 
 				// TEMPORARY PLACEHOLDER
+				// To-do: Replace with fetching settings
 				setSettings({
 					users: newUsers.map((user) => {
 						return {
 							...user,
 							displayName: user.userId,
-							canChat: false,
-							canVideo: false,
+							canChat: true,
+							canVideo: true,
 						};
 					}),
 				});
@@ -198,6 +201,19 @@ function Room() {
 			};
 		}
 	}, [chatSocket, updateUserList, receiveSettings, receiveKick]);
+
+	// Enable/disable chatbox and linker based on settings
+	useEffect(() => {
+		if (settings && settings.users) {
+			const userSettings = settings.users.filter(
+				(user) => user.userId === userInfo.userId
+			)[0];
+			if (userSettings) {
+				setIsChatDisabled(!userSettings.canChat);
+				setIsLinkerDisabled(!userSettings.canVideo);
+			}
+		}
+	}, [settings, userInfo]);
 
 	return (
 		<RoomPageWrapper>
@@ -224,9 +240,9 @@ function Room() {
 				</div>
 			</div>
 			<div className="room-sidebar">
-				<VideoLinker linkCallback={linkCallback} />
+				<VideoLinker isDisabled={isLinkerDisabled} linkCallback={linkCallback} />
 				<Watchmates users={users} />
-				<Chatbox socket={chatSocket} roomId={id} />
+				<Chatbox socket={chatSocket} roomId={id} isDisabled={isChatDisabled} />
 				<RoomDrawer
 					roomId={id}
 					isHost={user.isHost}
