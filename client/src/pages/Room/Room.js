@@ -13,6 +13,7 @@ import Watchmates from "../../components/Watchmates/Watchmates";
 import UserContext from "../../components/Context/UserContext";
 import RoomDrawer from "../../components/RoomDrawer/RoomDrawer";
 import RoomPageWrapper from "./Room.styled";
+import TimeoutModal from "../../components/TimeoutModal/TimeoutModal";
 
 function Room() {
 	const { id } = useParams();
@@ -25,6 +26,7 @@ function Room() {
 	const [chatSocket, setChatSocket] = useState(null);
 	const [videoSocket, setVideoSocket] = useState(null);
 	const [roomInfo, setRoomInfo] = useState({});
+	const [isTimeoutPromptOpen, setIsTimeoutPromptOpen] = useState(false);
 
 	const history = useHistory();
 	const { userInfo } = useContext(UserContext);
@@ -61,6 +63,14 @@ function Room() {
 	const kickCallback = (userId) => {
 		console.log(`Kick user ${userId}`);
 		chatSocket.emit("SEND_KICK", id, userId);
+	};
+
+	const openTimout = () => {
+		setIsTimeoutPromptOpen(true);
+	};
+
+	const closeTimeout = () => {
+		setIsTimeoutPromptOpen(false);
 	};
 
 	// Guide user to join room, retrieve room's info and connect to its sockets
@@ -227,6 +237,7 @@ function Room() {
 						setIsWaiting={setIsWaiting}
 						roomInfo={roomInfo}
 						setRoomInfo={setRoomInfo}
+						finishCallback={openTimout}
 					/>
 				</div>
 			</div>
@@ -243,6 +254,7 @@ function Room() {
 					saveCallback={saveCallback}
 				/>
 			</div>
+			<TimeoutModal isOpen={isTimeoutPromptOpen} closeCallback={closeTimeout} />
 		</RoomPageWrapper>
 	);
 }
