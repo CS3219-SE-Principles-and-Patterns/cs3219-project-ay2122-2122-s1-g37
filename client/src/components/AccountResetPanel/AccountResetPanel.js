@@ -63,12 +63,13 @@ function AccountResetPanel() {
 		);
 		
 		resetErrors();
-		// To-do. Integrate with backend
-		if (newPassRef.current.value === repeatPassRef.current.value) {
+
+		//if (newPassRef.current.value === repeatPassRef.current.value) {
 			axios
 				.put("/api/auth/reset", {
 					rid: rid,
 					password: newPassRef.current.value,
+					repeatedPassword: repeatPassRef.current.value
 				})
 				.then((res) => {
 					console.log(res.data.message);
@@ -81,7 +82,9 @@ function AccountResetPanel() {
 							const errData = err.response.data.errors;
 							let passErrMsgSet = false;
 							for (let i = 0; i < errData.length; i++) {
-								if (!passErrMsgSet) {
+								if (errData[i].param === "repeatedPassword") {
+									setRepeatPassFlag(true);
+								} else if (errData[i].param === "password" && !passErrMsgSet) {
 									// take only first password error message
 									passErrMsgSet = true;
 									setPasswordFlag(true);
@@ -96,9 +99,11 @@ function AccountResetPanel() {
 						}
 					}
 				});
+		/*
 		} else {
 			setRepeatPassFlag(true);
 		}
+		*/
 	};
 
 	const returnHome = () => {

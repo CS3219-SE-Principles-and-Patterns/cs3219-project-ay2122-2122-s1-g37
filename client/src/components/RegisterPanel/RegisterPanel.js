@@ -12,6 +12,7 @@ import UserContext from "../Context/UserContext";
 const CREDENTIALS_ERROR_CODE = 422;
 const EMAIL_EXISTS_ERROR_CODE = 409;
 const PASSWORD_AGAIN_ERROR_MSG = "Please enter the same password.";
+const DISPLAY_NAME_ERROR_MSG = "Display Name must contain at least 1 character.";
 
 function RegisterPanel({ successCallback, cancelCallback }) {
 	const nameRef = useRef(null);
@@ -20,7 +21,6 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 	const passAgainRef = useRef(null);
 	const [generalFlag, setGeneralFlag] = useState(false);
 	const [displayNameFlag, setDisplayNameFlag] = useState(false);
-	const [displayNameError, setDisplayNameError] = useState("");
 	const [emailFlag, setEmailFlag] = useState(false);
 	const [emailError, setEmailError] = useState("");
 	const [passwordFlag, setPasswordFlag] = useState(false);
@@ -41,12 +41,13 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 
 		resetErrors();
 
-		if (passRef.current.value === passAgainRef.current.value) {
+		//if (passRef.current.value === passAgainRef.current.value) {
 			axios
 				.post("/api/auth/register", {
 					displayName: nameRef.current.value,
 					email: emailRef.current.value,
 					password: passRef.current.value,
+					repeatedPassword: passAgainRef.current.value,
 				})
 				.then((res) => {
 					// Add to context
@@ -66,17 +67,21 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 				})
 				.catch((err) => {
 					if (err.response) {
+						console.log(err.response.data);
 						if (err.response.status === CREDENTIALS_ERROR_CODE) {
 							const errData = err.response.data.errors;
 							let passErrMsgSet = false;
+							let emailErrMsgSet = false;
 							for (let i = 0; i < errData.length; i++) {
 								if (errData[i].param === "displayName") {
 									setDisplayNameFlag(true);
-									setDisplayNameError(errData[i].msg);
-								} else if (errData[i].param === "email") {
+								} else if (errData[i].param === "email" && !emailErrMsgSet) {
+									emailErrMsgSet = true;
 									setEmailFlag(true);
 									setEmailError(errData[i].msg);
-								} else if (!passErrMsgSet) {
+								} else if (errData[i].param === "repeatedPassword") {
+									setPasswordAgainFlag(true);
+								} else if (errData[i].param === "password" && !passErrMsgSet) {
 									// take only first password error message
 									passErrMsgSet = true;
 									setPasswordFlag(true);
@@ -91,9 +96,11 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 						}
 					}
 				});
+		/*		
 		} else {
 			setPasswordAgainFlag(true);
 		}
+		*/
 	};
 
 	return (
@@ -111,7 +118,7 @@ function RegisterPanel({ successCallback, cancelCallback }) {
 					inputRef={nameRef}
 					variant="filled"
 					label="Display name"
-					helperText={displayNameFlag ? displayNameError : ""}
+					helperText={displayNameFlag ? DISPLAY_NAME_ERROR_MSG : ""}
 				/>
 				<TextFieldWrapper
 					required
