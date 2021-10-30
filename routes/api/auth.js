@@ -16,14 +16,17 @@ const emailResetIDMap = new Map();
 const endpoint = process.env.NODE_ENV === "production" ? "http://54.179.111.98:5000/" : "http://localhost:3000/";
 
 const checkEmailExist = (email) => {
-	const selectUserSQl = "SELECT * FROM users WHERE email = ?";
-	db.query(selectUserSQl, email, (selectUserErr, selectUserRes) => {
-			if (selectUserRes != null && selectUserRes.length != 0) {
-				console.log("email already exists");
-				return false;
-			}
-			return true;
-	});
+		const selectUserSQl = "SELECT * FROM users WHERE email = ?";
+		return new Promise((resolve, reject) => {
+			db.query(selectUserSQl, email, (selectUserErr, selectUserRes) => {
+				if (selectUserRes != null && selectUserRes.length != 0) {
+					console.log("Email already exists");
+					reject(false);
+				}
+				console.log("Can use email for registration");
+				resolve(true);
+			});
+		});
 }
 
 const checkRepeatedPassword = (repeatedPassword, req) => {
@@ -68,13 +71,13 @@ router.post("/recover", async (req, res) => {
         const email = selectUserRes[0].email;
 
 		// Check if password reset request for email already exists.
-		const existingResetID = emailResetIDMap.get(email);
+		let resetID = emailResetIDMap.get(email);
 		if (typeof existingResetID === "undefined") {
 			// map some random id to email to keep track
-			const randomID = crypto.randomBytes(16).toString("hex");
-			resetIDEmailMap.set(randomID, email);
-			emailResetIDMap.set(email, randomID);
-			console.log(`random ID mapped to email: ${randomID}`);
+			resetID = crypto.randomBytes(16).toString("hex");
+			resetIDEmailMap.set(resetID, email);
+			emailResetIDMap.set(email, resetID);
+			console.log(`random ID mapped to email: ${resetID}`);
 		}
 
         // use hashed password as secret.
@@ -83,7 +86,7 @@ router.post("/recover", async (req, res) => {
         const resetToken = jwt.sign({ email: email }, password, { expiresIn: "15m" });
         console.log(`signed reset token: ${resetToken}`);
 
-        const link = endpoint + "reset/" + randomID + "/" + resetToken;
+        const link = endpoint + "reset/" + resetID + "/" + resetToken;
         console.log(`link: ${link}`);
 
         //send email
@@ -128,10 +131,10 @@ Peerwatch Team`,
 });
 
 router.post("/authreset", (req, res) => {
-	const randomID = req.body.rid;
-	if (randomID === null) {
+	const resetID = req.body.rid;
+	if (resetID === null) {
 		// no random id provided
-		console.log("randomID not given");
+		console.log("resetID not given");
 
 		return res.status(401).json({
 			message: "Reset ID invalid.",
@@ -139,7 +142,7 @@ router.post("/authreset", (req, res) => {
 	}
 
 	// get email from mapped random ID
-	const email = resetIDEmailMap.get(randomID);
+	const email = resetIDEmailMap.get(resetID);
 	if (typeof email === "undefined") {
 		// somehow email not mapped or invalid
 		console.log("email not mapped");
@@ -192,10 +195,10 @@ router.post("/authreset", (req, res) => {
 
 router.put("/reset", resetValidation, async (req, res) => {
 	try {
-		const randomID = req.body.rid;
-		if (randomID === null) {
+		const resetID = req.body.rid;
+		if (resetID === null) {
 			// no random id
-			console.log("randomID not given");
+			console.log("resetID not given");
 
 			return res.status(401).json({
 				message: "Reset ID invalid.",
@@ -203,7 +206,7 @@ router.put("/reset", resetValidation, async (req, res) => {
 		}
 
 		// get email from mapped random ID
-		const email = resetIDEmailMap.get(randomID);
+		const email = resetIDEmailMap.get(resetID);
 		if (typeof email === undefined) {
 			// somehow email not mapped or invalid
 			console.log("email not mapped");
@@ -231,7 +234,7 @@ router.put("/reset", resetValidation, async (req, res) => {
 		    }
 			
 		    // delete mapping since able to reset
-            resetIDEmailMap.delete(randomID);
+            resetIDEmailMap.delete(resetID);
 			emailResetIDMap.delete(email);
             console.log("Password resetted");
             return res.status(200).json({
@@ -251,7 +254,6 @@ router.post("/register", registerValidation, async (req, res) => {
 		// if account credentials has validation errors
 		const errors = await validationResult(req);
 		if (!errors.isEmpty()) {
-			console.log(errors);
 			return res.status(422).json({ errors: errors.array() });
 		}
 
@@ -277,7 +279,7 @@ router.post("/register", registerValidation, async (req, res) => {
 				expiresIn: "30 days",
 			});
 			console.log("Account created");
-			res.status(201).json({
+			return res.status(201).json({
 				message: "Account registered.",
 				token: accessToken,
 				userId: newUser.userId,
