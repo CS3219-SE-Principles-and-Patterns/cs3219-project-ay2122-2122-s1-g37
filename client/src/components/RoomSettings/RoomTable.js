@@ -34,38 +34,34 @@ function RoomTable({ users, setUsers, kickCallback }) {
 					</TableRow>
 				</TableHead>
 				<TableBody>
-					{users
-						.filter((user) => user.userId !== userInfo.userId)
-						.map((user) => (
-							<TableRow key={user.userId}>
-								<TableCell>{user.displayName}</TableCell>
-								<TableCell>
-									<Checkbox
-										className="table-checkbox"
-										disabled={user.userId === userInfo.userId}
-										checked={user.canChat === 1}
-										onChange={() => toggleChat(user.userId)}
-									/>
-								</TableCell>
-								<TableCell>
-									<Checkbox
-										className="table-checkbox"
-										disabled={user.userId === userInfo.userId}
-										checked={user.canVideo === 1}
-										onChange={() => toggleVideo(user.userId)}
-									/>
-								</TableCell>
-								<TableCell>
-									<KickButtonWrapper
-										variant="contained"
-										disabled={user.userId === userInfo.userId}
-										onClick={() => kickCallback(user.userId)}
-									>
-										Kick
-									</KickButtonWrapper>
-								</TableCell>
-							</TableRow>
-						))}
+					{users.map((user) => (
+						<TableRow key={user.userId}>
+							<TableCell>{user.displayName}</TableCell>
+							<TableCell>
+								<Checkbox
+									className="table-checkbox"
+									checked={user.canChat === 1}
+									onChange={() => toggleChat(user.userId)}
+								/>
+							</TableCell>
+							<TableCell>
+								<Checkbox
+									className="table-checkbox"
+									checked={user.canVideo === 1}
+									onChange={() => toggleVideo(user.userId)}
+								/>
+							</TableCell>
+							<TableCell>
+								<KickButtonWrapper
+									variant="contained"
+									disabled={user.userId === userInfo.userId}
+									onClick={() => kickCallback(user.userId)}
+								>
+									Kick
+								</KickButtonWrapper>
+							</TableCell>
+						</TableRow>
+					))}
 				</TableBody>
 			</Table>
 		</TableContainerWrapper>
