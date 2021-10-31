@@ -33,28 +33,32 @@ export const RoomContainerWrapper = styled.div`
 	.room-player {
 		.room-res-wrapper {
 			position: relative;
-			${(props) => (!props.isWaiting ? "padding-top: 56.25%;" : "")}
+			padding-top: 56.25%;
+			.room-join-fallback {
+				height: 100%;
+				width: 100%;
+
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
 			.react-player {
 				position: absolute;
 				top: 0;
 				left: 0;
 			}
 		}
-		.room-join-fallback {
-			height: 100%;
-			width: 100%;
-
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-		}
 	}
 
 	.room-sidebar {
 		height: 80vh;
 
-		display: ${(props) => (props.isWaiting ? "none" : "grid")};
+		display: grid;
 		grid-template-rows: auto 4fr 8fr auto;
 		grid-row-gap: 1em;
 

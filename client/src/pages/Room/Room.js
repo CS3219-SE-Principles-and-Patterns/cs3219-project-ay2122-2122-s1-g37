@@ -200,16 +200,16 @@ function Room() {
 		<RoomPageWrapper>
 			<RoomContainerWrapper isWaiting={isWaiting}>
 				<div className="room-player">
-					{isWaiting && (
-						<div className="room-join-fallback">
-							<CircularProgress color="warning" />
-							<Typography align="center" variant="h6">
-								Joining...
-							</Typography>
-						</div>
-					)}
 					<div className="room-res-wrapper">
-						<Suspense fallback={<CircularProgress color="warning" />}>
+						{isWaiting && (
+							<div className="room-join-fallback">
+								<CircularProgress color="warning" />
+								<Typography align="center" variant="h6">
+									Joining...
+								</Typography>
+							</div>
+						)}
+						<Suspense>
 							<VideoPlayer
 								users={users}
 								user={user}
