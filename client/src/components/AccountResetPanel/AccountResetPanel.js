@@ -36,7 +36,7 @@ function AccountResetPanel() {
 
 	useEffect(() => {
 		const config = { headers: { Authorization: `Bearer ${resetToken}` } };
-		axios.post("/api/auth/authreset", {rid: rid}, config)
+		axios.post("/api/auth/authreset", { rid: rid }, config)
 			.then((res) => {
 				console.log(res.data.message);
 			})
@@ -47,23 +47,22 @@ function AccountResetPanel() {
 				setIsValid(false);
 			});
 	}, [resetToken, rid]);
-	
+
 	useEffect(() => {
-		if(!isValid) {
+		if (!isValid) {
 			history.push("/notfound");
 		}
-	}, [history, isValid])
+	}, [history, isValid]);
 
 	const resetPass = (e) => {
 		e.preventDefault();
 		console.log(
 			`random id: ${rid}, reset token: ${resetToken}, password: ${newPassRef.current.value}, repeat password: ${repeatPassRef.current.value}`
 		);
-		
+
 		resetErrors();
 
-		axios
-			.put("/api/auth/reset", {
+		axios.put("/api/auth/reset", {
 				rid: rid,
 				password: newPassRef.current.value,
 				repeatedPassword: repeatPassRef.current.value
@@ -111,8 +110,8 @@ function AccountResetPanel() {
 				</Typography>
 				{generalFlag && (
 					<p style={{ color: "red" }}>
-						Error when resetting password for your account. Please ask the PeerWatch team for
-						assistance.
+						Error when resetting password for your account. Please ask the PeerWatch
+						team for assistance.
 					</p>
 				)}
 				{unauthFlag && (
