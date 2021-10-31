@@ -1,26 +1,26 @@
 import { Checkbox, Table, TableBody, TableCell, TableHead, TableRow } from "@mui/material";
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { TableContainerWrapper, KickButtonWrapper } from "./RoomTable.styled";
 import UserContext from "../../components/Context/UserContext";
 
-function RoomTable({ settings, setSettings, kickCallback }) {
+function RoomTable({ users, setUsers, kickCallback }) {
 	const { userInfo } = useContext(UserContext);
 
 	const toggleChat = (userId) => {
-		let userSettings = settings.users.slice().map((user) => {
-			return { ...user, canChat: user.userId === userId ? !user.canChat : user.canChat };
+		let newUsers = users.slice().map((user) => {
+			const canChat = user.userId === userId ? 1 - user.canChat : user.canChat;
+			return { ...user, canChat };
 		});
-		setSettings({ ...settings, users: userSettings });
+		setUsers(newUsers);
 	};
 
 	const toggleVideo = (userId) => {
-		let userSettings = settings.users.slice().map((user) => {
-			return { ...user, canVideo: user.userId === userId ? !user.canVideo : user.canVideo };
+		let newUsers = users.slice().map((user) => {
+			const canVideo = user.userId === userId ? 1 - user.canVideo : user.canVideo;
+			return { ...user, canVideo };
 		});
-		setSettings({ ...settings, users: userSettings });
+		setUsers(newUsers);
 	};
-
-	useEffect(() => {}, [settings]);
 
 	return (
 		<TableContainerWrapper>
@@ -34,16 +34,16 @@ function RoomTable({ settings, setSettings, kickCallback }) {
 					</TableRow>
 				</TableHead>
 				<TableBody>
-					{settings.users
+					{users
 						.filter((user) => user.userId !== userInfo.userId)
-						.map((user, index) => (
+						.map((user) => (
 							<TableRow key={user.userId}>
 								<TableCell>{user.displayName}</TableCell>
 								<TableCell>
 									<Checkbox
 										className="table-checkbox"
 										disabled={user.userId === userInfo.userId}
-										checked={user.canChat}
+										checked={user.canChat === 1}
 										onChange={() => toggleChat(user.userId)}
 									/>
 								</TableCell>
@@ -51,7 +51,7 @@ function RoomTable({ settings, setSettings, kickCallback }) {
 									<Checkbox
 										className="table-checkbox"
 										disabled={user.userId === userInfo.userId}
-										checked={user.canVideo}
+										checked={user.canVideo === 1}
 										onChange={() => toggleVideo(user.userId)}
 									/>
 								</TableCell>
