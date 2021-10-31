@@ -1,6 +1,6 @@
 import { ListItem, Typography } from "@mui/material";
 import { ListWrapper, WatchmatesWrapper } from "./Watchmates.styled";
-import React, { useEffect } from "react";
+import React from "react";
 
 function Watchmates({ users }) {
 	return (

@@ -24,7 +24,7 @@ export const RoomContainerWrapper = styled.div`
 
 	display: grid;
 	grid-template-rows: none;
-	grid-template-columns: 1fr auto;
+	grid-template-columns: 3fr 1fr;
 	grid-row-gap: 0em;
 	grid-column-gap: 1em;
 	align-items: center;
@@ -61,6 +61,10 @@ export const RoomContainerWrapper = styled.div`
 		min-height: 0;
 		min-width: 0;
 
+		.watchmates {
+			display: block;
+		}
+
 		.chatbox {
 			overflow: hidden;
 			min-width: 0;
@@ -80,6 +84,12 @@ export const RoomContainerWrapper = styled.div`
 
 		.room-sidebar {
 			height: 100%;
+
+			grid-template-rows: auto 1fr auto;
+
+			.watchmates {
+				display: none;
+			}
 		}
 	}
 `;
