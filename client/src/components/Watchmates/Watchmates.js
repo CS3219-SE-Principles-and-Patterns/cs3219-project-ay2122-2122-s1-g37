@@ -1,6 +1,6 @@
 import { ListItem, Typography } from "@mui/material";
 import { ListWrapper, WatchmatesWrapper } from "./Watchmates.styled";
-import React from "react";
+import React, { useEffect } from "react";
 
 function Watchmates({ users }) {
 	return (
@@ -9,7 +9,7 @@ function Watchmates({ users }) {
 			<ListWrapper>
 				{users.map((user) => {
 					return (
-						<ListItem key={user.userId}>{`${user.userId} ${
+						<ListItem key={user.userId}>{`${user.displayName} ${
 							user.isHost ? "(Host)" : ""
 						}`}</ListItem>
 					);
