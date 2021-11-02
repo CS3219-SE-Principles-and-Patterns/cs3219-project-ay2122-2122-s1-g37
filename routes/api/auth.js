@@ -19,6 +19,9 @@ const endpoint =
 		: "http://localhost:8080/";
 
 const checkEmailExist = (email) => {
+	if (typeof email === "undefined") {
+		return false;
+	}
 	const selectUserSQl = "SELECT * FROM users WHERE email = ?";
 	return new Promise((resolve, reject) => {
 		db.query(selectUserSQl, email, (selectUserErr, selectUserRes) => {
