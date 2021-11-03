@@ -14,7 +14,7 @@ jobs:
         env:
             LOCAL_DB_HOST: localhost
             LOCAL_DB_USER: root
-            LOCAL_DB_PASS: ${{TEST_SQL_PASS}}
+            LOCAL_DB_PASS: ${{ secrets.TEST_SQL_PASS }}
             LOCAL_DB_PORT: 3306
         steps:
           - name: Checkout
