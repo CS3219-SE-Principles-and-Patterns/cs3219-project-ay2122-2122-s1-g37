@@ -18,14 +18,14 @@ jobs:
                     - 3306:3306
                 env:
                     MYSQL_HOST: 127.0.0.1
-                    MYSQL_USER: root
+                    MYSQL_USER: user
                     MYSQL_PASSWORD: root
                     MYSQL_DATABASE: peerwatch
                     MYSQL_ROOT_PASSWORD: root
                 options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
         env:
             LOCAL_DB_HOST: 127.0.0.1
-            LOCAL_DB_USER: root
+            LOCAL_DB_USER: user
             LOCAL_DB_PASS: root
             LOCAL_DB_PORT: 3306
         steps:
