@@ -41,7 +41,7 @@ jobs:
                 redis-version: 6
           - name: Setup MySQL
             run: |
-                mysql --host 127.0.0.1 --port 3306 -uuser -proot -e "GRANT ALL PRIVILEGES ON peerwatch.* TO 'user'@'%';"
+                mysql --host 127.0.0.1 --port 3306 -uroot -p -e "GRANT ALL PRIVILEGES ON peerwatch.* TO 'user'@'%';"
                 mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_users.sql
                 mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_rooms.sql
                 mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_users_in_rooms.sql
