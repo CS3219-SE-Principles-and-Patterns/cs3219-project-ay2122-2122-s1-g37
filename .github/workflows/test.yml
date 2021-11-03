@@ -12,10 +12,10 @@ jobs:
     test:
         runs-on: ubuntu-latest
         env:
-            LOCAL_DB_HOST=localhost
-            LOCAL_DB_USER=root
-            LOCAL_DB_PASS=root
-            LOCAL_DB_PORT=3306
+            LOCAL_DB_HOST: localhost
+            LOCAL_DB_USER: root
+            LOCAL_DB_PASS: root
+            LOCAL_DB_PORT: 3306
         steps:
           - name: Checkout
             uses: actions/checkout@v2
