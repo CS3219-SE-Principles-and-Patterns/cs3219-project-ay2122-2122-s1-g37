@@ -39,13 +39,11 @@ jobs:
             uses: supercharge/redis-github-action@1.2.0
             with:
                 redis-version: 6
-          - name: Setup MySQL
+          - name: Verify MySQL connection from container 
             run: |
-                - name: Verify MySQL connection from container 
-          run: |
-            apt-get update
-            apt-get install -y mysql-client
-            mysql --host peerwatch -uroot -ppassword -e "SHOW DATABASES"
+                apt-get update
+                apt-get install -y mysql-client
+                mysql --host peerwatch -uroot -ppassword -e "SHOW DATABASES"
           - name: Install dependencies
             run: npm run install-all
           - name: Cypress tests
