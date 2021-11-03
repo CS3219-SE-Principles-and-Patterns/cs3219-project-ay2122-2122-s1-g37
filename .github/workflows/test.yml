@@ -41,9 +41,7 @@ jobs:
                 redis-version: 6
           - name: Setup MySQL
             run: |
-                sed -i old 's/\DEFINER\=`[^`]*`@`[^`]*`//g' ./sql/peerwatch_users.sql
-                sed -i old 's/\DEFINER\=`[^`]*`@`[^`]*`//g' ./sql/peerwatch_rooms.sql
-                sed -i old 's/\DEFINER\=`[^`]*`@`[^`]*`//g' ./sql/peerwatch_users_in_rooms.sql
+                mysql --host 127.0.0.1 --port 3306 -uuser -proot "UPDATE mysql.user SET Super_Priv='Y' WHERE user='user' AND host='%';FLUSH PRIVILEGES;"
                 mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_users.sql
                 mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_rooms.sql
                 mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_users_in_rooms.sql
