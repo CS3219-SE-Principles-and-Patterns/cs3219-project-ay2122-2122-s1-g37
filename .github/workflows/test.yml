@@ -41,9 +41,7 @@ jobs:
                 redis-version: 6
           - name: Setup MySQL
             run: |
-                mysql --host peerwatch -uroot -ppassword -e \. /sql/peerwatch_rooms.sql
-                mysql --host peerwatch -uroot -ppassword -e \. /sql/peerwatch_users.sql
-                mysql --host peerwatch -uroot -ppassword -e \. /sql/peerwatch_users_in_rooms.sql
+                mysql --host 127.0.0.1 --port 3306 -uuser -proot -e "SHOW DATABASES"
           - name: Install dependencies
             run: npm run install-all
           - name: Cypress tests
