@@ -18,14 +18,12 @@ jobs:
                     - 3306:3306
                 env:
                     MYSQL_HOST: 127.0.0.1
-                    MYSQL_USER: user
-                    MYSQL_PASSWORD: root
                     MYSQL_DATABASE: peerwatch
                     MYSQL_ROOT_PASSWORD: root
                 options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
         env:
             LOCAL_DB_HOST: 127.0.0.1
-            LOCAL_DB_USER: user
+            LOCAL_DB_USER: root
             LOCAL_DB_PASS: root
             LOCAL_DB_PORT: 3306
         steps:
@@ -41,10 +39,9 @@ jobs:
                 redis-version: 6
           - name: Setup MySQL
             run: |
-                mysql --host 127.0.0.1 --port 3306 -uroot -p -e "GRANT ALL PRIVILEGES ON peerwatch.* TO 'user'@'%';"
-                mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_users.sql
-                mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_rooms.sql
-                mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_users_in_rooms.sql
+                mysql --host 127.0.0.1 --port 3306 -uroot -proot < ./sql/peerwatch_users.sql
+                mysql --host 127.0.0.1 --port 3306 -uroot -proot < ./sql/peerwatch_rooms.sql
+                mysql --host 127.0.0.1 --port 3306 -uroot -proot < ./sql/peerwatch_users_in_rooms.sql
           - name: Install dependencies
             run: npm run install-all
           - name: Cypress tests
