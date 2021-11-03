@@ -43,7 +43,7 @@ jobs:
             run: |
                 mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_users.sql
                 mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_rooms.sql
-                mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_user_in_rooms.sql
+                mysql --host 127.0.0.1 --port 3306 -uuser -proot < ./sql/peerwatch_users_in_rooms.sql
           - name: Install dependencies
             run: npm run install-all
           - name: Cypress tests
