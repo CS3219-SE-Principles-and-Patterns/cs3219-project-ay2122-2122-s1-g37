@@ -41,9 +41,11 @@ jobs:
                 redis-version: 6
           - name: Setup MySQL
             run: |
-                mysql -e \. /sql/peerwatch_rooms.sql
-                mysql -e \. /sql/peerwatch_users.sql
-                mysql -e \. /sql/peerwatch_users_in_rooms.sql
+                - name: Verify MySQL connection from container 
+          run: |
+            apt-get update
+            apt-get install -y mysql-client
+            mysql --host peerwatch -uroot -ppassword -e "SHOW DATABASES"
           - name: Install dependencies
             run: npm run install-all
           - name: Cypress tests
