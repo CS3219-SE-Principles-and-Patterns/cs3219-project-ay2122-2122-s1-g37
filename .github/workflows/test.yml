@@ -11,10 +11,21 @@ on:
 jobs:
     test:
         runs-on: ubuntu-latest
+        services:
+            mysql:
+                image: mysql:latest
+                ports:
+                    - 3306
+                env:
+                    MYSQL_USER: root
+                    MYSQL_PASSWORD: root
+                    MYSQL_DATABASE: peerwatch
+                    MYSQL_ROOT_PASSWORD: root
+                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
         env:
             LOCAL_DB_HOST: localhost
             LOCAL_DB_USER: root
-            LOCAL_DB_PASS: ${{ secrets.TEST_SQL_PASS }}
+            LOCAL_DB_PASS: root
             LOCAL_DB_PORT: 3306
         steps:
           - name: Checkout
@@ -29,8 +40,6 @@ jobs:
                 redis-version: 6
           - name: Setup MySQL
             run: |
-                sudo /etc/init.d/mysql start
-                mysql -e 'CREATE DATABASE peerwatch;' -u${{ env.LOCAL_DB_USER }} -p${{ env.LOCAL_DB_PASS }}
                 mysql -e \. /sql/peerwatch_rooms.sql
                 mysql -e \. /sql/peerwatch_users.sql
                 mysql -e \. /sql/peerwatch_users_in_rooms.sql
