@@ -22,6 +22,7 @@ let userId = null;
 let userId2 = null;
 let resetID = null;
 let resetToken = null;
+let accessToken = null;
 
 describe("POST /api/auth/register", () => {
 	it("register with no input", (done) => {
@@ -389,6 +390,7 @@ describe("POST /api/auth/register", () => {
 				res.should.have.status(201);
 				res.body.should.property("message", "Account registered.");
 				userId = res.body.userId;
+				accessToken = res.body.token;
 				done();
 			});
 	})
@@ -533,7 +535,7 @@ describe("POST /api/auth/authtoken", () => {
 	it("successful auth", (done) => {
 		chai.request(app)
 			.post("/api/auth/authtoken")
-			.set("authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RAdGVzdC5jb20iLCJkaXNwbGF5TmFtZSI6InRlc3QiLCJwYXNzd29yZCI6IiQyYSQxMCRha3BhclpOdmdxTWNtT2pMOHhtdHIuQlkxOC8yb09jVmxhc2NBTUhVQnZ3Y2VsS29Id21kbSIsImlzR29vZ2xlIjpmYWxzZSwidXNlcklkIjozLCJpYXQiOjE2MzU5NTExNDgsImV4cCI6MTYzODU0MzE0OH0.OAgjKadejDMC4ffHIsL8RPOqtiOG0DV1s3KrVKPPiho")
+			.set("authorization", "Bearer " + accessToken)
 			.end((err, res) => {
 				res.should.have.status(200);
 				res.body.should.property("message", "Account authenticated.");
