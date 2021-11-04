@@ -26,6 +26,9 @@ jobs:
             LOCAL_DB_USER: root
             LOCAL_DB_PASS: root
             LOCAL_DB_PORT: 3306
+            ACCESS_SECRET: randomsecret
+            EMAIL_USER: ${{ secrets.EMAIL_USER }}
+            EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
         steps:
           - name: Checkout
             uses: actions/checkout@v2
